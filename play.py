@@ -1,6 +1,6 @@
 from game import Game
 
-game = Game()
+game = Game(animate=True)
 
 while game.run:
     game.display()
