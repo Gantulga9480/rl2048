@@ -116,6 +116,7 @@ class Node:
 class Board:
 
     def __init__(self) -> None:
+        self.score = 0
         self.modified = False
         self.modified_x = 0
         self.modified_y = 0
@@ -127,10 +128,12 @@ class Board:
             self.generate()
 
     def get_board(self):
-        board = np.zeros((4, 4))
+        board = np.zeros((4, 4, 3))
         for i in range(4):
             for j in range(4):
-                board[i, j] = self.board[i][j].value
+                board[i, j, 0] = self.board[i][j].value
+                board[i, j, 1] = self.board[i][j].value
+                board[i, j, 2] = self.board[i][j].value
         return board.copy()
 
     def reset(self):
@@ -203,6 +206,7 @@ class Board:
             self.modified_x = x
             self.modified_y = y + 1
             self.action = Utils.ADDED
+            self.score += self.board[x][y+1].value
         elif self.board[x][y+1].value == 0:
             self.board[x][y+1].setValue(self.board[x][y].value)
             self.board[x][y].setValue(0)
@@ -241,6 +245,7 @@ class Board:
             self.modified_x = x
             self.modified_y = y - 1
             self.action = Utils.ADDED
+            self.score += self.board[x][y-1].value
         elif self.board[x][y-1].value == 0:
             self.board[x][y-1].setValue(self.board[x][y].value)
             self.board[x][y].setValue(0)
@@ -279,6 +284,7 @@ class Board:
             self.modified_x = x - 1
             self.modified_y = y
             self.action = Utils.ADDED
+            self.score += self.board[x-1][y].value
         elif self.board[x-1][y].value == 0:
             self.board[x-1][y].setValue(self.board[x][y].value)
             self.board[x][y].setValue(0)
@@ -317,6 +323,7 @@ class Board:
             self.modified_x = x + 1
             self.modified_y = y
             self.action = Utils.ADDED
+            self.score += self.board[x+1][y].value
         elif self.board[x+1][y].value == 0:
             self.board[x+1][y].setValue(self.board[x][y].value)
             self.board[x][y].setValue(0)
@@ -341,11 +348,13 @@ class Game:
         self.font = pygame.font.SysFont("arial", 30, True)  # Game font
         self.win = pygame.display.set_mode((Utils.WIDTH,
                                             Utils.HEIGTH))  # Initialize main window
-        self.run = True                                     # Game running flag
+        self.running = True                                     # Game running flag
         self.over = False
         self.is_moved = False
         self.board = Board()
         self.last_board = None
+
+        self.move_count = 0
 
         self.animate = animate
 
@@ -366,7 +375,8 @@ class Game:
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.run = False                            # Close game window
+                self.running = False                            # Close game window
+                self.over = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     self.move(Utils.UP)
@@ -381,42 +391,50 @@ class Game:
                 elif event.key == pygame.K_u:
                     self.undo()
 
-    def move(self, dir: int):
-        if dir == Utils.UP and not self.over:
-            l_board = copy.deepcopy(self.board.board)
+    def move(self, action: int) -> tuple:
+        prev_score = self.board.score
+        reward = 0
+        l_board = copy.deepcopy(self.board.board)
+        if action == Utils.UP and not self.over:
             if self.board.up():
                 self.is_moved = True
-                self.last_board = copy.deepcopy(l_board)
-        elif dir == Utils.RIGHT and not self.over:
-            l_board = copy.deepcopy(self.board.board)
+        elif action == Utils.RIGHT and not self.over:
             if self.board.right():
                 self.is_moved = True
-                self.last_board = copy.deepcopy(l_board)
-        elif dir == Utils.DOWN and not self.over:
-            l_board = copy.deepcopy(self.board.board)
+        elif action == Utils.DOWN and not self.over:
             if self.board.down():
                 self.is_moved = True
-                self.last_board = copy.deepcopy(l_board)
-        elif dir == Utils.LEFT and not self.over:
-            l_board = copy.deepcopy(self.board.board)
+        elif action == Utils.LEFT and not self.over:
             if self.board.left():
                 self.is_moved = True
-                self.last_board = copy.deepcopy(l_board)
-
         if self.is_moved:
+            self.last_board = copy.deepcopy(l_board)
+            self.move_count += 1
             if not self.board.is_full() and not self.over:
                 self.board.generate()
             # self.is_moved = False
             self.over = self.board.check()
+            new_score = self.board.score
+            if self.over:
+                # reward = -new_score / self.move_count + -10000 / self.move_count
+                reward = -10
+            else:
+                # reward = new_score - prev_score
+                reward = 1
+            return self.over, self.board.get_board(), reward
+        else:
+            return self.over, self.board.get_board(), -1
 
     def undo(self) -> None:
         self.over = False
         self.board.board = copy.deepcopy(self.last_board)
 
-    def reset(self) -> None:
+    def reset(self):
         del self.board
         self.board = Board()
         self.over = False
+        self.move_count = 0
+        return self.board.get_board()
 
     def drawNums(self) -> None:
         if not self.is_moved or not self.animate:
@@ -532,3 +550,6 @@ class Game:
         txt = self.font.render('GAME OVER', 1, Color.BLACK)
         self.win.blit(txt, [Utils.WIDTH//2 - txt.get_width()//2,
                             Utils.HEIGTH//2 - txt.get_height()//2])
+
+    def title(self, msg: str):
+        pygame.display.set_caption(msg)
