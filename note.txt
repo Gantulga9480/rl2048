@@ -1,0 +1,6 @@
+TODO
+1. 4x wider net, keep depth -
+2. with undo - check
+3. 0 reward every move - failed
+4. higher batch size with low replay memory - failed
+5. more dynamic epsilon greedey method - check

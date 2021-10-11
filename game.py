@@ -10,6 +10,9 @@ class Utils:
     RIGHT = 1
     UP = 2
     DOWN = 3
+    UNDO = 4
+
+    ACTION_SPACE = 5
 
     WIDTH = 410
     HEIGTH = WIDTH
@@ -45,6 +48,15 @@ class Utils:
                  [BOX_PAD+BOX*1, BOX_PAD+BOX*3],
                  [BOX_PAD+BOX*2, BOX_PAD+BOX*3],
                  [BOX_PAD+BOX*3, BOX_PAD+BOX*3]]]
+
+    @staticmethod
+    def mask_array(array, mask):
+        a_min = np.min(array) - 1
+        for i, item in enumerate(mask):
+            if not item:
+                array[i]= a_min
+        return array
+
 
 
 class Color:
@@ -128,12 +140,10 @@ class Board:
             self.generate()
 
     def get_board(self):
-        board = np.zeros((4, 4, 3))
+        board = np.zeros((4, 4))
         for i in range(4):
             for j in range(4):
-                board[i, j, 0] = self.board[i][j].value
-                board[i, j, 1] = self.board[i][j].value
-                board[i, j, 2] = self.board[i][j].value
+                board[i, j] = self.board[i][j].value
         return board.copy()
 
     def reset(self):
@@ -153,7 +163,6 @@ class Board:
                     self.board[pos_y][pos_x].setValue(4)
                 else:
                     self.board[pos_y][pos_x].setValue(2)
-                self.generated_box.append([])
                 done = True
 
     def check(self) -> bool:
@@ -180,15 +189,15 @@ class Board:
 
     def right(self):
         self.modified = False
+        self.modified_board = []
         for i in range(3, -1, -1):
             for j in range(4):
                 if self.board[j][i].value != 0:
                     self.modified_x = j
                     self.modified_y = i
                     self.action = Utils.INPLACE
-                    if i < 3:
+                    if i <= 2:
                         self.move_right(j, i)
-                    # if j != self.modified_x or i != self.modified_y:
                     self.modified_board.append([[j, i], [self.modified_x,
                                                             self.modified_y],
                                                 Utils.RIGHT,
@@ -199,9 +208,9 @@ class Board:
     def move_right(self, x: int, y: int) -> None:
         if self.board[x][y] == self.board[x][y+1] and \
                 not self.board[x][y+1].modified:
+            self.board[x][y+1].modified = True
             self.board[x][y+1].setValue(self.board[x][y].value*2)
             self.board[x][y].setValue(0)
-            self.board[x][y+1].modified = True
             self.modified = True
             self.modified_x = x
             self.modified_y = y + 1
@@ -214,20 +223,20 @@ class Board:
             self.modified_x = x
             self.modified_y = y + 1
             self.action = Utils.MOVED
-            if y+1 < 3:
+            if y <= 1:
                 self.move_right(x, y+1)
 
     def left(self):
         self.modified = False
+        self.modified_board = []
         for i in range(4):
             for j in range(4):
                 if self.board[j][i].value != 0:
                     self.modified_x = j
                     self.modified_y = i
                     self.action = Utils.INPLACE
-                    if i > 0:
+                    if i >= 1:
                         self.move_left(j, i)
-                    # if j != self.modified_x or i != self.modified_y:
                     self.modified_board.append([[j, i], [self.modified_x,
                                                             self.modified_y],
                                                 Utils.LEFT,
@@ -253,20 +262,20 @@ class Board:
             self.modified_x = x
             self.modified_y = y - 1
             self.action = Utils.MOVED
-            if y-1 != 0:
+            if y >= 2:
                 self.move_left(x, y-1)
 
     def up(self):
         self.modified = False
+        self.modified_board = []
         for i in range(4):
             for j in range(4):
                 if self.board[j][i].value != 0:
                     self.modified_x = j
                     self.modified_y = i
                     self.action = Utils.INPLACE
-                    if j > 0:
+                    if j >= 1:
                         self.move_up(j, i)
-                    # if j != self.modified_x or i != self.modified_y:
                     self.modified_board.append([[j, i], [self.modified_x,
                                                             self.modified_y],
                                                 Utils.UP,
@@ -277,9 +286,9 @@ class Board:
     def move_up(self, x: int, y: int):
         if self.board[x][y] == self.board[x-1][y] and \
                 not self.board[x-1][y].modified:
+            self.board[x-1][y].modified = True
             self.board[x-1][y].setValue(self.board[x][y].value*2)
             self.board[x][y].setValue(0)
-            self.board[x-1][y].modified = True
             self.modified = True
             self.modified_x = x - 1
             self.modified_y = y
@@ -292,20 +301,20 @@ class Board:
             self.modified_x = x - 1
             self.modified_y = y
             self.action = Utils.MOVED
-            if x-1 != 0:
+            if x >= 2:
                 self.move_up(x-1, y)
 
     def down(self):
         self.modified = False
+        self.modified_board = []
         for i in range(4):
             for j in range(3, -1, -1):
                 if self.board[j][i].value != 0:
                     self.modified_x = j
                     self.modified_y = i
                     self.action = Utils.INPLACE
-                    if j < 3:
+                    if j <= 2:
                         self.move_down(j, i)
-                    # if j != self.modified_x or i != self.modified_y:
                     self.modified_board.append([[j, i], [self.modified_x,
                                                          self.modified_y],
                                                 Utils.DOWN,
@@ -316,9 +325,9 @@ class Board:
     def move_down(self, x: int, y: int):
         if self.board[x][y] == self.board[x+1][y] and \
                 not self.board[x+1][y].modified:
+            self.board[x+1][y].modified = True
             self.board[x+1][y].setValue(self.board[x][y].value*2)
             self.board[x][y].setValue(0)
-            self.board[x+1][y].modified = True
             self.modified = True
             self.modified_x = x + 1
             self.modified_y = y
@@ -331,7 +340,7 @@ class Board:
             self.modified_x = x + 1
             self.modified_y = y
             self.action = Utils.MOVED
-            if x+1 != 3:
+            if x <= 1:
                 self.move_down(x+1, y)
 
     def mod_reset(self):
@@ -353,6 +362,7 @@ class Game:
         self.is_moved = False
         self.board = Board()
         self.last_board = None
+        self.last_reward = 0
 
         self.move_count = 0
 
@@ -395,46 +405,87 @@ class Game:
         prev_score = self.board.score
         reward = 0
         l_board = copy.deepcopy(self.board.board)
-        if action == Utils.UP and not self.over:
-            if self.board.up():
-                self.is_moved = True
-        elif action == Utils.RIGHT and not self.over:
-            if self.board.right():
-                self.is_moved = True
-        elif action == Utils.DOWN and not self.over:
-            if self.board.down():
-                self.is_moved = True
-        elif action == Utils.LEFT and not self.over:
-            if self.board.left():
-                self.is_moved = True
+        if action == Utils.UP:
+            self.is_moved = self.board.up()
+        elif action == Utils.RIGHT:
+            self.is_moved = self.board.right()
+        elif action == Utils.DOWN:
+            self.is_moved = self.board.down()
+        elif action == Utils.LEFT:
+            self.is_moved = self.board.left()
+        elif action == Utils.UNDO:
+            self.is_moved = self.undo()
         if self.is_moved:
-            self.last_board = copy.deepcopy(l_board)
             self.move_count += 1
-            if not self.board.is_full() and not self.over:
-                self.board.generate()
-            # self.is_moved = False
-            self.over = self.board.check()
-            new_score = self.board.score
-            if self.over:
-                # reward = -new_score / self.move_count + -10000 / self.move_count
-                reward = -10
+            new_score = self.board.score - prev_score
+            if action != Utils.UNDO:
+                self.last_board = copy.deepcopy(l_board)
+                if not self.board.is_full() and not self.over:
+                    self.board.generate()
+                self.over = self.board.check()
+                if self.over:
+                    reward = -1 * self.board.score
+                else:
+                    reward = new_score
             else:
-                # reward = new_score - prev_score
-                reward = 1
-            return self.over, self.board.get_board(), reward
+                reward = -1 * self.last_reward
+            self.last_reward = reward
+            # return self.over, self.board.get_board().flatten(), reward
+            return self.over, self.get_state(action), reward
         else:
-            return self.over, self.board.get_board(), -1
-
-    def undo(self) -> None:
-        self.over = False
-        self.board.board = copy.deepcopy(self.last_board)
+            return False
 
     def reset(self):
         del self.board
         self.board = Board()
+        self.last_board = None
+        self.last_reward = 0
         self.over = False
         self.move_count = 0
-        return self.board.get_board()
+        return self.get_state(0)
+
+    def get_state(self, action):
+        state = list(self.board.get_board().flatten())
+        # state.append(action)
+        state = np.array(state)
+        return state
+
+    def get_possible_moves(self):
+        moves = []
+        mask = []
+        l_board = copy.deepcopy(self.board.board)
+        for i in range(Utils.ACTION_SPACE):
+            is_move = False
+            if i == Utils.UP and not self.over:
+                is_move = self.board.up()
+            elif i == Utils.RIGHT and not self.over:
+                is_move = self.board.right()
+            elif i == Utils.DOWN and not self.over:
+                is_move = self.board.down()
+            elif i == Utils.LEFT and not self.over:
+                is_move = self.board.left()
+            elif i == Utils.UNDO:
+                is_move = True if self.last_board is not None else False
+            if is_move:
+                moves.append(i)
+            mask.append(is_move)
+            self.board.board = copy.deepcopy(l_board)
+        return moves, mask
+
+    def get_model_moves(self, q_vals):
+        _, mask = self.get_possible_moves()
+        q_vals = Utils.mask_array(q_vals, mask)
+        return np.argmax(q_vals)
+
+    def undo(self) -> None:
+        if self.last_board is not None:
+            self.board.score -= self.last_reward
+            self.over = False
+            self.board.board = copy.deepcopy(self.last_board)
+            self.last_board = None
+            return True
+        else:
+            return False
 
     def drawNums(self) -> None:
         if not self.is_moved or not self.animate:
@@ -457,6 +508,7 @@ class Game:
                         self.win.blit(txt, [Utils.POSITION[i][j][0]+(Utils.BOX-Utils.BOX_PAD)//2 - txt.get_width()//2,
                                             Utils.POSITION[i][j][1]+(Utils.BOX-Utils.BOX_PAD)//2 - txt.get_height()//2])
         elif self.is_moved and self.animate:
+            self.is_moved = False
             animate_list = []
             done = False
             for item in self.board.modified_board:
@@ -469,7 +521,6 @@ class Game:
                     speed = Utils.SPEED_MEDIUM
                 elif dist == 1:
                     speed = Utils.SPEED_SLOW
-                # print(dist, speed)
                 start_x = item[0][1]*Utils.BOX + Utils.BOX_PAD
                 start_y = item[0][0]*Utils.BOX + Utils.BOX_PAD
                 end_x = item[1][1]*Utils.BOX + Utils.BOX_PAD
@@ -489,7 +540,6 @@ class Game:
                                                     Utils.BOX-Utils.BOX_PAD),
                                         0, 7)
                 for i, item in enumerate(animate_list):
-                    # print(animate_list[i])
                     if item[4] != 0:
                         if item[5] == Utils.UP:
                             if not animate_list[i][6]:
@@ -542,7 +592,6 @@ class Game:
                 if done_count == len(animate_list):
                     done = True
                     self.board.modified_board = []
-                    self.is_moved = False
                 pygame.display.flip()              # draw main window to display
                 self.clock.tick(Utils.FPS)                # 60 frames per second clock tick
 

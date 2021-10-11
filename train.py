@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras.layers import Dense, Input, Dropout, Activation, Conv2D, Flatten, C
+from keras.layers import Dense, Input, Dropout, Activation, Conv2D, Flatten
 from keras.models import Sequential, load_model, save_model
 from keras.optimizers import Adam
 from collections import deque
@@ -8,6 +8,14 @@ import random
 import numpy as np
 from datetime import datetime as dt
 from game import Game
+
+
+def mask_array(array, mask):
+    a_min = np.min(array) - 1
+    for i, item in enumerate(mask):
+        if not item:
+            array[i]= a_min
+    return array
 
 
 class ReplayBuffer:
@@ -29,7 +37,7 @@ class Agent:
         self.visual = visual
         self.event = event
         self.game = Game(animate=animate)
-
+        self.epsilon = 1
         self.main_nn = None
         self.target_nn = None
 
@@ -41,25 +49,28 @@ class Agent:
         return self.game.move(action=action)
 
     def get_action(self, state):
+        moves, mask = self.game.get_possible_moves()
         if random.random() < self.epsilon:
-            return random.randint(0, 3)
+            return moves[random.randint(0, len(moves)-1)]
         else:
-            return np.argmax(self.main_nn.predict(np.expand_dims(state, axis=0))[0])
+            q_vals = self.main_nn.predict(np.expand_dims(state, axis=0))[0]
+            q_vals = mask_array(q_vals, mask)
+            return np.argmax(q_vals)
 
 class Trainer(Agent):
 
     def __init__(self, visual: bool, event: bool, animate: bool) -> None:
         super().__init__(visual=visual, event=event, animate=animate)
         self.target_net_update = 5
-        self.epochs = 5
-        self.batch_size = 256
-        self.min_buffer_size = 10000
+        self.epochs = 20
+        self.batch_size = 128
+        self.min_buffer_size = 1000
         self.learning_rate = 0.001
-        self.epsilon = 1
-        self.ep_decay = 0.99999
+        self.min_epsilon = 0
+        self.ep_decay = 0.9999
         self.gamma = 0.9
-        self.input_shape = 16
-        self.output_shape = 4
+        self.input_shape = 17
+        self.output_shape = 5
 
         policy = tf.keras.mixed_precision.Policy('float32')
         tf.keras.mixed_precision.set_global_policy(policy)
@@ -70,14 +81,19 @@ class Trainer(Agent):
 
     def create_model(self, name: str) -> Sequential:
         model = Sequential(name=name)
-        model.add(Input(shape=(4, 4, 3), batch_size=self.batch_size))
-        model.add(Conv2D(128, (4, 4)))
-        model.add(Activation('sigmoid'))
-        # model.add(Dropout(0.2))
-        model.add(Flatten())
-        model.add(Dense(64))
+        model.add(Input(shape=(self.input_shape, ), batch_size=self.batch_size))
+        model.add(Dense(self.input_shape))
         model.add(Activation('relu'))
-        # model.add(Dropout(0.2))
+        model.add(Dense(18))
+        model.add(Activation('relu'))
+        model.add(Dense(22))
+        model.add(Activation('relu'))
+        model.add(Dense(18))
+        model.add(Activation('relu'))
+        model.add(Dense(14))
+        model.add(Activation('relu'))
+        model.add(Dense(10))
+        model.add(Activation('relu'))
         model.add(Dense(self.output_shape))
         model.add(Activation('linear', dtype='float32'))
         model.compile(loss='mse',
@@ -89,7 +105,7 @@ class Trainer(Agent):
     def fit(self, data) -> None:
         self.main_nn.fit(np.array(data[0]), np.array(data[1]),
                          epochs=self.epochs, batch_size=self.batch_size,
-                         shuffle=False, verbose=1)
+                         shuffle=False, verbose=2)
         # self.update_count += 1
         # if self.update_count % self.target_net_update == 0:
         #     self.set_weight()
@@ -120,12 +136,17 @@ class Trainer(Agent):
 
 
 def main():
-    buffer = ReplayBuffer(100000)
+    buffer = ReplayBuffer(5000)
     trainer = Trainer(visual=True, event=True, animate=False)
 
-    trainer.main_nn = trainer.create_model('main')
-    trainer.target_nn = trainer.create_model('target')
-    trainer.set_weight()
+    try:
+        print('LOADING MODEL')
+        trainer.main_nn = load_model('main.h5')
+        trainer.target_nn = load_model('main.h5')
+    except Exception:
+        trainer.main_nn = trainer.create_model('main')
+        trainer.target_nn = trainer.create_model('target')
+        trainer.set_weight()
 
     ep_reward_hist = []
     ep_reward = 0
@@ -138,7 +159,7 @@ def main():
             over, state_, reward = trainer.step(action=action)
             buffer.insert([state, action, state_, reward, over])
             state = state_
-            trainer.epsilon *= trainer.ep_decay
+            trainer.epsilon = max(trainer.min_epsilon, trainer.epsilon*trainer.ep_decay)
             ep_reward += reward
             if len(buffer.buffer) >= trainer.min_buffer_size:
                 trainer.fit(trainer.prepare_data(buffer.sample(trainer.batch_size)))
@@ -149,12 +170,13 @@ def main():
             trainer.game.title('eps: ' + str(trainer.epsilon) + ' ep_r: ' + str(ep_reward))
         ep_reward_hist.append(ep_reward)
 
-    save_model(trainer.main_nn, 'model_' + str(max(ep_reward_hist)) + '_' + str(dt.now()).split(' ')[0] + '.h5')
-
     plt.plot(ep_reward_hist)
     plt.ylabel('REWARD')
     plt.xlabel('EPISODE')
     plt.show()
+
+    save_model(trainer.main_nn, 'model_' + str(max(ep_reward_hist)) + '_' + str(dt.now()).split(' ')[0] + '.h5')
+
 
 if __name__ == '__main__':
     main()
