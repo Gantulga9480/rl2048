@@ -12,7 +12,7 @@ class Utils:
     DOWN = 3
     UNDO = 4
 
-    ACTION_SPACE = 5
+    ACTION_SPACE = 4
 
     WIDTH = 410
     HEIGTH = WIDTH
@@ -54,9 +54,8 @@ class Utils:
         a_min = np.min(array) - 1
         for i, item in enumerate(mask):
             if not item:
-                array[i]= a_min
+                array[i] = a_min
         return array
-
 
 
 class Color:
@@ -95,7 +94,7 @@ class Node:
     def __repr__(self) -> str:
         return str(self.value)
 
-    def setValue(self, value : int):
+    def setValue(self, value: int):
         self.value = value
         if self.value == 0:
             self.color = Color.BOX_EMPTY
@@ -199,7 +198,7 @@ class Board:
                     if i <= 2:
                         self.move_right(j, i)
                     self.modified_board.append([[j, i], [self.modified_x,
-                                                            self.modified_y],
+                                                         self.modified_y],
                                                 Utils.RIGHT,
                                                 self.action])
         self.mod_reset()
@@ -238,7 +237,7 @@ class Board:
                     if i >= 1:
                         self.move_left(j, i)
                     self.modified_board.append([[j, i], [self.modified_x,
-                                                            self.modified_y],
+                                                         self.modified_y],
                                                 Utils.LEFT,
                                                 self.action])
         self.mod_reset()
@@ -277,7 +276,7 @@ class Board:
                     if j >= 1:
                         self.move_up(j, i)
                     self.modified_board.append([[j, i], [self.modified_x,
-                                                            self.modified_y],
+                                                         self.modified_y],
                                                 Utils.UP,
                                                 self.action])
         self.mod_reset()
@@ -356,28 +355,29 @@ class Game:
         self.clock = pygame.time.Clock()                    # Game clock
         self.font = pygame.font.SysFont("arial", 30, True)  # Game font
         self.win = pygame.display.set_mode((Utils.WIDTH,
-                                            Utils.HEIGTH))  # Initialize main window
-        self.running = True                                     # Game running flag
+                                            Utils.HEIGTH))
+        self.running = True
         self.over = False
         self.is_moved = False
         self.board = Board()
         self.last_board = None
         self.last_reward = 0
-
+        self.episode = 0
         self.move_count = 0
-
+        self.is_drawing = True
         self.animate = animate
 
     def display(self) -> None:
         """
         Display game visual to main window
         """
-        self.win.fill(Color.BG)
-        self.drawNums()
-        if self.over:
-            self.game_over_screen()
-        pygame.display.flip()              # draw main window to display
-        self.clock.tick(Utils.FPS)                # 60 frames per second clock tick
+        if self.is_drawing:
+            self.win.fill(Color.BG)
+            self.drawNums()
+            if self.over:
+                self.game_over_screen()
+            pygame.display.flip()              # draw main window to display
+            self.clock.tick(Utils.FPS)
 
     def eventHandler(self) -> None:
         """
@@ -385,7 +385,7 @@ class Game:
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.running = False                            # Close game window
+                self.running = False
                 self.over = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -400,10 +400,10 @@ class Game:
                     self.reset()
                 elif event.key == pygame.K_u:
                     self.undo()
+                elif event.key == pygame.K_SPACE:
+                    self.is_drawing = not self.is_drawing
 
-    def move(self, action: int) -> tuple:
-        prev_score = self.board.score
-        reward = 0
+    def move(self, action: int) -> None:
         l_board = copy.deepcopy(self.board.board)
         if action == Utils.UP:
             self.is_moved = self.board.up()
@@ -417,23 +417,11 @@ class Game:
             self.is_moved = self.undo()
         if self.is_moved:
             self.move_count += 1
-            new_score = self.board.score - prev_score
             if action != Utils.UNDO:
                 self.last_board = copy.deepcopy(l_board)
                 if not self.board.is_full() and not self.over:
                     self.board.generate()
                 self.over = self.board.check()
-                if self.over:
-                    reward = -1 * self.board.score
-                else:
-                    reward = new_score
-            else:
-                reward = -1 * self.last_reward
-            self.last_reward = reward
-            # return self.over, self.board.get_board().flatten(), reward
-            return self.over, self.get_state(action), reward
-        else:
-            return False
 
     def reset(self):
         del self.board
@@ -442,15 +430,14 @@ class Game:
         self.last_reward = 0
         self.over = False
         self.move_count = 0
-        return self.get_state(0)
+        self.episode += 1
+        return self.get_state()
 
-    def get_state(self, action):
-        state = list(self.board.get_board().flatten())
-        # state.append(action)
-        state = np.array(state)
-        return state
+    def get_state(self):
+        raise NotImplementedError
 
     def get_possible_moves(self):
+        """ Return posible move index and mask """
         moves = []
         mask = []
         l_board = copy.deepcopy(self.board.board)
@@ -472,11 +459,6 @@ class Game:
             self.board.board = copy.deepcopy(l_board)
         return moves, mask
 
-    def get_model_moves(self, q_vals):
-        _, mask = self.get_possible_moves()
-        q_vals = Utils.mask_array(q_vals, mask)
-        return np.argmax(q_vals)
-
     def undo(self) -> None:
         if self.last_board is not None:
             self.board.score -= self.last_reward
@@ -493,17 +475,17 @@ class Game:
             for i in range(4):
                 for j in range(4):
                     pygame.draw.rect(self.win, self.board.board[i][j].color,
-                                    pygame.Rect(*Utils.POSITION[i][j],
-                                                Utils.BOX-Utils.BOX_PAD,
-                                                Utils.BOX-Utils.BOX_PAD),
-                                    0, 7)
+                                     pygame.Rect(*Utils.POSITION[i][j],
+                                                 Utils.BOX-Utils.BOX_PAD,
+                                                 Utils.BOX-Utils.BOX_PAD),
+                                     0, 7)
                     if self.board.board[i][j].value != 0:
                         if self.board.board[i][j].value < 4096:
                             txt = self.font.render(str(self.board.board[i][j].value),
-                                                1, Color.BLACK)
+                                                   1, Color.BLACK)
                         else:
                             txt = self.font.render(str(self.board.board[i][j].value),
-                                                1, Color.WHITE)
+                                                   1, Color.WHITE)
 
                         self.win.blit(txt, [Utils.POSITION[i][j][0]+(Utils.BOX-Utils.BOX_PAD)//2 - txt.get_width()//2,
                                             Utils.POSITION[i][j][1]+(Utils.BOX-Utils.BOX_PAD)//2 - txt.get_height()//2])
@@ -535,10 +517,10 @@ class Game:
                 for i in range(4):
                     for j in range(4):
                         pygame.draw.rect(self.win, Color.BOX_EMPTY,
-                                        pygame.Rect(*Utils.POSITION[i][j],
-                                                    Utils.BOX-Utils.BOX_PAD,
-                                                    Utils.BOX-Utils.BOX_PAD),
-                                        0, 7)
+                                         pygame.Rect(*Utils.POSITION[i][j],
+                                                     Utils.BOX-Utils.BOX_PAD,
+                                                     Utils.BOX-Utils.BOX_PAD),
+                                         0, 7)
                 for i, item in enumerate(animate_list):
                     if item[4] != 0:
                         if item[5] == Utils.UP:
@@ -582,23 +564,23 @@ class Game:
                     if self.last_board[self.board.modified_board[i][0][0]][self.board.modified_board[i][0][1]].value != 0:
                         if self.last_board[self.board.modified_board[i][0][0]][self.board.modified_board[i][0][1]].value < 4096:
                             txt = self.font.render(str(self.last_board[self.board.modified_board[i][0][0]][self.board.modified_board[i][0][1]].value),
-                                                1, Color.BLACK)
+                                                   1, Color.BLACK)
                         else:
                             txt = self.font.render(str(self.last_board[self.board.modified_board[i][0][0]][self.board.modified_board[i][0][1]].value),
-                                                1, Color.WHITE)
+                                                   1, Color.WHITE)
 
                         self.win.blit(txt, [animate_list[i][0]+(Utils.BOX-Utils.BOX_PAD)//2 - txt.get_width()//2,
                                             animate_list[i][1]+(Utils.BOX-Utils.BOX_PAD)//2 - txt.get_height()//2])
                 if done_count == len(animate_list):
                     done = True
                     self.board.modified_board = []
-                pygame.display.flip()              # draw main window to display
-                self.clock.tick(Utils.FPS)                # 60 frames per second clock tick
+                pygame.display.flip()
+                self.clock.tick(Utils.FPS)
 
     def game_over_screen(self) -> None:
         txt = self.font.render('GAME OVER', 1, Color.BLACK)
         self.win.blit(txt, [Utils.WIDTH//2 - txt.get_width()//2,
                             Utils.HEIGTH//2 - txt.get_height()//2])
 
-    def title(self, msg: str):
+    def set_caption(self, msg: str):
         pygame.display.set_caption(msg)
