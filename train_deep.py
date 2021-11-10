@@ -29,7 +29,7 @@ class Agent:
         self.visual = visual
         self.event = event
         self.game = DeepGame(animate=animate)
-        self.epsilon = 1
+        self.epsilon = 0.05
         self.main_nn = None
         self.target_nn = None
 
@@ -43,7 +43,7 @@ class Agent:
     def get_action(self, state):
         moves, mask = self.game.get_possible_moves()
         if random.random() < self.epsilon:
-            return moves[random.randint(0, len(moves)-1)]
+            return random.choice(moves)
         else:
             return self.game.get_model_moves(self.main_nn.predict(np.expand_dims(state, axis=0))[0])
 
@@ -57,8 +57,8 @@ class Trainer(Agent):
         self.batch_size = 128
         self.min_buffer_size = 1000
         self.learning_rate = 0.001
-        self.min_epsilon = 0
-        self.ep_decay = 0.9999
+        self.min_epsilon = 0.05
+        self.ep_decay = 0.99999
         self.gamma = 0.9
         self.input_shape = 16
         self.output_shape = Utils.ACTION_SPACE
@@ -74,11 +74,14 @@ class Trainer(Agent):
         model = Sequential(name=name)
         model.add(Input(shape=(self.input_shape, ),
                         batch_size=self.batch_size))
-        model.add(Dense(self.input_shape))
+        model.add(Dense(160))
         model.add(Activation('relu'))
-        model.add(Dense(32))
+        model.add(Dropout(0.1))
+        model.add(Dense(80))
         model.add(Activation('relu'))
-        model.add(Dense(10))
+        model.add(Dropout(0.1))
+        model.add(Dense(16))
+        model.add(Activation('relu'))
         model.add(Dropout(0.1))
         model.add(Dense(self.output_shape))
         model.add(Activation('linear', dtype='float32'))
@@ -133,10 +136,12 @@ def main():
 
     ep_reward_hist = []
     ep_reward = 0
+    ep = 0
 
     while trainer.game.running:
         state = trainer.game.reset()
         ep_reward = 0
+        ep += 1
         while not trainer.game.over:
             action = trainer.get_action(state)
             over, state_, reward = trainer.step(action=action)
@@ -147,11 +152,12 @@ def main():
             ep_reward += reward
             if len(buffer.buffer) >= trainer.min_buffer_size:
                 trainer.fit(trainer.prepare_data(buffer.sample(trainer.batch_size)))
-                trainer.update_count += 1
+                # trainer.update_count += 1
+            # if trainer.update_count == trainer.target_net_update:
             if over:
                 trainer.set_weight()
-                trainer.update_count += 1
-            trainer.game.title('eps: ' + str(trainer.epsilon) + ' ep_r: ' + str(ep_reward))
+                # trainer.update_count = 0
+            trainer.game.set_caption('eps: ' + str(trainer.epsilon) + ' ep_r: ' + str(ep_reward) + ' ep: ' + str(ep))
         ep_reward_hist.append(ep_reward)
 
     plt.plot(ep_reward_hist)
@@ -159,7 +165,7 @@ def main():
     plt.xlabel('EPISODE')
     plt.show()
 
-    save_model(trainer.main_nn, 'model_' + str(max(ep_reward_hist)) + '_' + str(dt.now()).split(' ')[0] + '.h5')
+    save_model(trainer.main_nn, 'model_' + str(ep) + '_' + str(max(ep_reward_hist)) + '_' + str(dt.now()).split(' ')[0] + '.h5')
 
 
 if __name__ == '__main__':

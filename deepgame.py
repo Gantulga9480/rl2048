@@ -41,7 +41,7 @@ class DeepGame(Game):
                 if self.over:
                     reward = -10000
                 else:
-                    reward = new_score
+                    reward = new_score + 2
             else:
                 reward = -1 * self.last_reward
             self.last_reward = reward

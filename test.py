@@ -1,4 +1,4 @@
-from game import Game
+from deepgame import DeepGame
 import os
 import numpy as np
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -6,8 +6,8 @@ from keras.models import load_model
 
 
 
-game = Game(animate=False)
-model = load_model('model_14752_2021-09-30_deep6_undo_failed.h5')
+game = DeepGame(animate=True)
+model = load_model('model_2008_-5916_2021-11-10.h5')
 
 count = 0
 

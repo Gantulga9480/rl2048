@@ -437,7 +437,7 @@ class Game:
         raise NotImplementedError
 
     def get_possible_moves(self):
-        """ Return posible move index and mask """
+        """ Return index of posible moves with mask """
         moves = []
         mask = []
         l_board = copy.deepcopy(self.board.board)
@@ -496,7 +496,8 @@ class Game:
             for item in self.board.modified_board:
                 speed = 0
                 dirs = item[2]
-                dist = abs(item[0][0] - item[1][0]) + abs(item[0][1] - item[1][1])
+                dist = abs(item[0][0] - item[1][0]) + \
+                    abs(item[0][1] - item[1][1])
                 if dist == 3:
                     speed = Utils.SPEED_FAST
                 elif dist == 2:
@@ -508,9 +509,11 @@ class Game:
                 end_x = item[1][1]*Utils.BOX + Utils.BOX_PAD
                 end_y = item[1][0]*Utils.BOX + Utils.BOX_PAD
                 if speed != 0:
-                    animate_list.append([start_x, start_y, end_x, end_y, speed, dirs, False])
+                    animate_list.append([start_x, start_y, end_x,
+                                         end_y, speed, dirs, False])
                 else:
-                    animate_list.append([start_x, start_y, end_x, end_y, speed, dirs, True])
+                    animate_list.append([start_x, start_y, end_x,
+                                         end_y, speed, dirs, True])
             while not done:
                 done_count = 0
                 self.win.fill(Color.BG)
