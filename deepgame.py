@@ -10,8 +10,10 @@ class DeepGame(Game):
 
     def get_model_moves(self, q_vals):
         _, mask = self.get_possible_moves()
+        # selected_action = np.argmax(q_vals)
+        # return selected_action, mask[selected_action]
         q_vals = Utils.mask_array(q_vals, mask)
-        return np.argmax(q_vals)
+        return np.argmax(q_vals), True
 
     def get_state(self):
         return self.board.get_board().flatten()
@@ -32,19 +34,18 @@ class DeepGame(Game):
             self.is_moved = self.undo()
         if self.is_moved:
             self.move_count += 1
-            new_score = self.board.score - prev_score
             if action != Utils.UNDO:
                 self.last_board = copy.deepcopy(l_board)
-                if not self.board.is_full() and not self.over:
+                if not self.board.is_full():
                     self.board.generate()
                 self.over = self.board.check()
                 if self.over:
-                    reward = -10000
+                    reward = -1 * self.board.score
+                    # reward = 0
                 else:
-                    reward = new_score + 2
+                    reward = self.board.score - prev_score
             else:
                 reward = -1 * self.last_reward
             self.last_reward = reward
             return self.over, self.get_state(), reward
-        else:
-            return False
+        return False
