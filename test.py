@@ -12,7 +12,6 @@ b = game.Board(board)
 e = game.Engine()
 c = game.Color()
 
-
 print(b)
 e.move(b, game.LEFT)
 print(b)

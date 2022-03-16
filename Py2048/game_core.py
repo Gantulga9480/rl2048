@@ -138,9 +138,9 @@ class Engine:
             self.right()
 
     def up(self):
-        for j in range(1, 4, 1):
+        for i in range(4):
             row_modif = False
-            for i in range(4):
+            for j in range(1, 4, 1):
                 if self.current_board[j, i] != 0:
                     modif = False
                     start_index = [j, i]
@@ -170,16 +170,16 @@ class Engine:
                         self.changes.append([start_index, stop_index, UP])
 
     def down(self):
-        for j in range(3, -1, -1):
+        for i in range(4):
             row_modif = False
-            for i in range(4):
+            for j in range(3, -1, -1):
                 if self.current_board[j, i] != 0:
                     modif = False
                     start_index = [j, i]
                     stop_index = [j, i]
                     while True:
                         try:
-                            if i == 1 and row_modif and not modif:
+                            if j == 2 and row_modif and not modif:
                                 break
                             elif self.current_board[j+1, i] == \
                                     self.current_board[j, i] and not modif:
