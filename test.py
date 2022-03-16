@@ -6,7 +6,7 @@ from tensorflow.keras.models import load_model
 
 
 game = DeepGame(animate=True)
-model = load_model('model_934_6080_2021-12-07.h5')
+model = load_model('model_994_-1424_2021-12-07.h5')
 
 count = 0
 
@@ -17,6 +17,8 @@ while game.running:
         game.eventHandler()
         count += 1
         if count == 50:
-            action, _ = game.get_model_moves(model.predict(np.expand_dims(state, axis=0))[0])
+            action, _ = game.get_model_moves(
+                model.predict(np.expand_dims(state, axis=0))[0]
+            )
             _, state, _ = game.move(action=action)
             count = 0
