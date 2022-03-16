@@ -7,49 +7,6 @@ import math  # test
 
 class Utils:
 
-    LEFT = 0
-    RIGHT = 1
-    UP = 2
-    DOWN = 3
-    UNDO = 4
-
-    ACTION_SPACE = 4
-
-    WIDTH = 410
-    HEIGTH = WIDTH
-    BOX_PAD = WIDTH % 100
-    BOX = (WIDTH - BOX_PAD) // 4
-    START_BOX = 2
-
-    FPS = 100
-
-    SPEED_FAST = (WIDTH - BOX - BOX_PAD) // (FPS//10)
-    SPEED_MEDIUM = (WIDTH - BOX * 2 - BOX_PAD) // (FPS//10)
-    SPEED_SLOW = (WIDTH - BOX * 3 - BOX_PAD) // (FPS//10)
-
-    MOVED = 1
-    ADDED = 2
-    INPLACE = 0
-
-    ODD = 10
-
-    POSITION = [[[BOX_PAD+BOX*0, BOX_PAD+BOX*0],
-                 [BOX_PAD+BOX*1, BOX_PAD+BOX*0],
-                 [BOX_PAD+BOX*2, BOX_PAD+BOX*0],
-                 [BOX_PAD+BOX*3, BOX_PAD+BOX*0]],
-                [[BOX_PAD+BOX*0, BOX_PAD+BOX*1],
-                 [BOX_PAD+BOX*1, BOX_PAD+BOX*1],
-                 [BOX_PAD+BOX*2, BOX_PAD+BOX*1],
-                 [BOX_PAD+BOX*3, BOX_PAD+BOX*1]],
-                [[BOX_PAD+BOX*0, BOX_PAD+BOX*2],
-                 [BOX_PAD+BOX*1, BOX_PAD+BOX*2],
-                 [BOX_PAD+BOX*2, BOX_PAD+BOX*2],
-                 [BOX_PAD+BOX*3, BOX_PAD+BOX*2]],
-                [[BOX_PAD+BOX*0, BOX_PAD+BOX*3],
-                 [BOX_PAD+BOX*1, BOX_PAD+BOX*3],
-                 [BOX_PAD+BOX*2, BOX_PAD+BOX*3],
-                 [BOX_PAD+BOX*3, BOX_PAD+BOX*3]]]
-
     @staticmethod
     def mask_array(array, mask):
         a_min = np.min(array) - 1

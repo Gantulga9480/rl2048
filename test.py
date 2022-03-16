@@ -1,24 +1,24 @@
-from deepgame import DeepGame
-import os
+import Py2048 as game
 import numpy as np
-from tensorflow.keras.models import load_model
-# os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
-game = DeepGame(animate=True)
-model = load_model('model_994_-1424_2021-12-07.h5')
+board = np.array([[0, 2, 2, 4],
+                  [2, 0, 0, 0],
+                  [0, 0, 0, 4],
+                  [2, 4, 4, 4]])
 
-count = 0
 
-while game.running:
-    state = game.reset()
-    while not game.over:
-        game.display()
-        game.eventHandler()
-        count += 1
-        if count == 50:
-            action, _ = game.get_model_moves(
-                model.predict(np.expand_dims(state, axis=0))[0]
-            )
-            _, state, _ = game.move(action=action)
-            count = 0
+b = game.Board(board)
+e = game.Engine()
+c = game.Color()
+
+
+print(b)
+e.move(b, game.LEFT)
+print(b)
+e.move(b, game.UP)
+print(b)
+e.move(b, game.RIGHT)
+print(b)
+e.move(b, game.DOWN)
+print(b)
