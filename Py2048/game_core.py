@@ -71,7 +71,6 @@ class Board:
             self.board[indices[0]][indices[1]].value = new_value
 
     def reset(self, board):
-        self.filled = False
         self.board = [[Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],
@@ -80,10 +79,12 @@ class Board:
         self.score = 0
         self.possible_moves = None
         self.changes = []
+        self.empty_boxes = []
         if board is not None:
             self.set(board)
         else:
             for _ in range(self.START_BOX):
+                self.empty_boxes = self.get_empty()
                 self.generate()
 
     def set(self, b) -> None:
@@ -104,34 +105,37 @@ class Board:
         return board.copy()
 
     def generate(self):
-        if not self.is_full():
-            done = False
-            while not done:
-                pos_x = random.randint(0, 3)
-                pos_y = random.randint(0, 3)
-                if self.board[pos_y][pos_x].value == 0:
-                    odd = random.randint(1, (100 // self.ODDS))
-                    if odd == (100 // self.ODDS):
-                        self.board[pos_y][pos_x].value = 4
-                    else:
-                        self.board[pos_y][pos_x].value = 2
-                    done = True
-        return not self.filled
+        if self.empty_boxes.__len__() > 0:
+            pos = random.choice(self.empty_boxes)
+            odd = random.randint(1, (100 // self.ODDS))
+            if odd == (100 // self.ODDS):
+                self.board[pos[0]][pos[1]].value = 4
+            else:
+                self.board[pos[0]][pos[1]].value = 2
 
-    def is_full(self):
-        self.filled = True
+    def get_empty(self):
+        empty_box = []
         for i in range(4):
             for j in range(4):
-                if self.board[i][j].value == 0:
-                    self.filled = False
-                    return self.filled
-        return self.filled
+                if self.board[i][j] == 0:
+                    empty_box.append([i, j])
+        if empty_box.__len__() > 0:
+            return empty_box.copy()
+        return None
+
+    def is_full(self):
+        self.empty_boxes = self.get_empty()
+        if self.empty_boxes.__len__() > 0:
+            return False
+        else:
+            return True
 
 
 class Engine:
 
     def __init__(self) -> None:
         self.board = None
+        self.changed = False
 
     def move(self, board: Board, dir) -> bool:
         self.board = board
@@ -150,29 +154,29 @@ class Engine:
             self.board.score += self.right()
         elif dir == UNDO:
             return self.undo()
-        if len(self.board.changes) > 0:
+        if self.changed:
             if not self.board.is_full():
                 self.board.generate()
-            changes_tmp = self.board.changes.copy()
+            changes_tmp = self.board.changes.copy()  # preserve changes
             self.get_possible_moves()
             self.board.changes = changes_tmp.copy()
             return True
         return False
 
-    def undo(self, full=True):
+    def undo(self):
         if self.board.last_board is not None:
             self.board.changes = self.board.last_board.changes.copy()
-            if full:
-                self.board.set(self.board.last_board.get())  # revert board
-                self.board.score = self.board.last_board.score  # revert score
-                self.board.last_board = None  # Delete last board after UNDO
-                self.get_possible_moves()
+            self.board.set(self.board.last_board.get())  # revert board
+            self.board.score = self.board.last_board.score  # revert score
+            self.board.last_board = None  # Delete last board after UNDO
+            self.get_possible_moves()
             return True
         else:
             return False
 
     def up(self):
         __score = 0
+        self.changed = False
         for i in range(4):
             row_modif = False
             for j in range(1, 4, 1):
@@ -203,6 +207,7 @@ class Engine:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
+                        self.changed = True
                         self.board.changes.append([start_index,
                                                    stop_index, UP])
                     else:
@@ -212,6 +217,7 @@ class Engine:
 
     def down(self):
         __score = 0
+        self.changed = False
         for i in range(4):
             row_modif = False
             for j in range(3, -1, -1):
@@ -242,6 +248,7 @@ class Engine:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
+                        self.changed = True
                         self.board.changes.append([start_index,
                                                    stop_index, DOWN])
                     else:
@@ -251,6 +258,7 @@ class Engine:
 
     def left(self):
         __score = 0
+        self.changed = False
         for j in range(4):
             row_modif = False
             for i in range(1, 4, 1):
@@ -281,6 +289,7 @@ class Engine:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
+                        self.changed = True
                         self.board.changes.append([start_index,
                                                    stop_index, LEFT])
                     else:
@@ -290,6 +299,7 @@ class Engine:
 
     def right(self):
         __score = 0
+        self.changed = False
         for j in range(4):
             row_modif = False
             for i in range(3, -1, -1):
@@ -320,6 +330,7 @@ class Engine:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
+                        self.changed = True
                         self.board.changes.append([start_index,
                                                    stop_index, RIGHT])
                     else:
@@ -343,8 +354,10 @@ class Engine:
             elif action == RIGHT:
                 self.right()
             elif action == UNDO:
-                self.undo(full=False)
-            if len(self.board.changes) > 0:
+                self.changed = False
+                if self.board.last_board is not None:
+                    self.changed = True
+            if self.changed:
                 moves.append(action)
                 self.board.changes.clear()
             self.board.set(start)  # Revert back to main board values
@@ -355,16 +368,16 @@ class Engine:
         return None
 
     def game_end(self, board: Board):
+        if board[3, 3] == 0:
+            return False
         for i in range(3):
             for j in range(4):
-                if board[i][j] == [i+1][j] or \
-                        board[i][j] == 0:
+                if board[i, j] == board[i+1, j] or \
+                        board[i, j] == 0:
                     return False
         for i in range(4):
             for j in range(3):
-                if board[i][j] == board[i][j+1] or \
-                        board[i][j] == 0:
+                if board[i, j] == board[i, j+1] or \
+                        board[i, j] == 0:
                     return False
-        if board[3][3] == 0:
-            return False
         return True
