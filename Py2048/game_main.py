@@ -72,10 +72,7 @@ class Py2048(PyGame):
             self.game_engine.move(self.game_board, dir)
         else:
             self.LOG('Impossible move!')
-        if self.game_engine.game_end(self.game_board):
-            self.over = True
-        else:
-            self.over = False
+        self.over = not self.game_board.available()
 
     def USR_render(self):
         if self.rendering:

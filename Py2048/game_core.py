@@ -60,8 +60,6 @@ class Board:
         """
         Access game board Node values by indexing Board class instanse.
         """
-        if not isinstance(indices, tuple):
-            return [node.value for node in self.board[indices]]
         return self.board[indices[0]][indices[1]].value
 
     def __setitem__(self, indices, new_value):
@@ -117,7 +115,7 @@ class Board:
         empty_box = []
         for i in range(4):
             for j in range(4):
-                if self.board[i][j] == 0:
+                if self.board[i][j].value == 0:
                     empty_box.append([i, j])
         if empty_box.__len__() > 0:
             return empty_box.copy()
@@ -129,6 +127,21 @@ class Board:
             return False
         else:
             return True
+
+    def available(self):
+        if self.board[3][3].value == 0:
+            return True
+        for i in range(3):
+            for j in range(4):
+                if self.board[i][j].value == self.board[i+1][j].value or \
+                        self.board[i][j].value == 0:
+                    return True
+        for i in range(4):
+            for j in range(3):
+                if self.board[i][j].value == self.board[i][j+1].value or \
+                        self.board[i][j].value == 0:
+                    return True
+        return False
 
 
 class Engine:
@@ -366,18 +379,3 @@ class Engine:
             return moves
         self.board.possible_moves = None
         return None
-
-    def game_end(self, board: Board):
-        if board[3, 3] == 0:
-            return False
-        for i in range(3):
-            for j in range(4):
-                if board[i, j] == board[i+1, j] or \
-                        board[i, j] == 0:
-                    return False
-        for i in range(4):
-            for j in range(3):
-                if board[i, j] == board[i, j+1] or \
-                        board[i, j] == 0:
-                    return False
-        return True
