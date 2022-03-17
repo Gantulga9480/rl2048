@@ -1,5 +1,5 @@
 # TODO Value Iteration
-from vigame import ViGame
+from old_game.vigame import ViGame
 from matplotlib import pyplot as plt
 
 game = ViGame(animate=False)

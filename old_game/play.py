@@ -1,4 +1,4 @@
-from game import Game
+from old_game.game import Game
 
 game = Game(animate=True)
 

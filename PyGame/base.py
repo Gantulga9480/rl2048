@@ -1,11 +1,11 @@
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = 'PYGAME_HIDE_SUPPORT_PROMPT'
-import pygame as pg   # noqa
-from .color import *  # noqa
-from .utils import *  # noqa
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame as pg    # noqa
+from .color import *   # noqa
+from .utils import *   # noqa
 
 
-class PyGameBase:
+class PyGame:
 
     def __init__(self,
                  title: str = 'PyGameDemo',
@@ -20,7 +20,7 @@ class PyGameBase:
         self.screen_height: int = height
         self.fps: int = fps
         self.title: str = title
-        self.backgroundColor: pg.Color = WHITE
+        self.backgroundColor: pg.Color = Color.WHITE
         self.running: bool = True
         self.rendering: bool = render
         self.clock = pg.time.Clock()
@@ -36,7 +36,7 @@ class PyGameBase:
         # Class method implementation flags
         self.__is_setup = True
         self.__is_eventHandler = True
-        self.__is_renderForeground = True
+        self.__is_render = True
 
     def __del__(self):
         pg.quit()
@@ -60,13 +60,13 @@ class PyGameBase:
     def __highLevelSetup(self):
         if self.__is_setup:
             try:
-                self.setup()
+                self.USR_setup()
             except NotImplementedError:
                 self.__is_setup = False
-                self.LOG(WARNING, 'Game setup not implemented!')
+                self.LOG(level=WARNING, msg='Game setup not implemented!')
         self.__lowLevelSetup()
 
-    def setup(self):
+    def USR_setup(self):
         """ User should override this method """
         raise NotImplementedError
 
@@ -78,12 +78,13 @@ class PyGameBase:
     def __highLevelEventHandler(self):
         if self.__lowLevelEventHandler() and self.__is_eventHandler:
             try:
-                self.eventHandler()
+                self.USR_eventHandler()
             except NotImplementedError:
                 self.__is_eventHandler = False
-                self.LOG(WARNING, 'Game event handler not implemented!')
+                self.LOG(level=WARNING,
+                         msg='Game event handler not implemented!')
 
-    def eventHandler(self):
+    def USR_eventHandler(self):
         """ User should override this method """
         raise NotImplementedError
 
@@ -101,15 +102,15 @@ class PyGameBase:
     def __highLevelRender(self):
         if self.rendering and self.running:
             self.renderBackground()
-            if self.__is_renderForeground:
+            if self.__is_render:
                 try:
-                    self.renderForeground()
+                    self.USR_render()
                 except NotImplementedError:
-                    self.__is_renderForeground = False
-                    self.LOG(WARNING, 'Game rendering nothing!')
+                    self.__is_render = False
+                    self.LOG(level=WARNING, msg='Game rendering nothing!')
             self.__lowLevelRender()
 
-    def renderForeground(self):
+    def USR_render(self):
         """ User should override this method """
         raise NotImplementedError
 
@@ -134,5 +135,5 @@ class PyGameBase:
         return pg.display.set_mode((width, height))
 
     @staticmethod
-    def LOG(level: str, msg: str):
+    def LOG(msg, level: str = DEBUG):
         print(f'[{level}]: {msg}')

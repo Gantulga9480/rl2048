@@ -1,3 +1,3 @@
-from .base import PyGameBase
+from .base import PyGame
 from .color import Color
 from .utils import *

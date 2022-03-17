@@ -1,4 +1,4 @@
-from game import Game, Utils
+from old_game.game import Game, Utils
 import copy
 import json
 import numpy as np

@@ -1,7 +1,14 @@
 import numpy as np
 import random
 import copy
-from .utils import *
+
+UP = 0
+DOWN = 1
+LEFT = 2
+RIGHT = 3
+UNDO = 4  # Experimantal
+INPLACE = 5  # For animation
+ACTION_SPACE = 5
 
 
 class Node:
@@ -37,22 +44,17 @@ class Board:
         Otherwise will generate new board.
         Input shape must be (4, 4).
         """
-        self.reset()
-        if board is not None:
-            self.set(board)
-        else:
-            for _ in range(self.START_BOX):
-                self.generate()
+        self.reset(board)
 
     def __repr__(self) -> str:
-        return (f'{self.board[0][0]} {self.board[0][1]} {self.board[0][2]}'
-                f' {self.board[0][3]}\n'
-                f'{self.board[1][0]} {self.board[1][1]} {self.board[1][2]}'
-                f' {self.board[1][3]}\n'
-                f'{self.board[2][0]} {self.board[2][1]} {self.board[2][2]}'
-                f' {self.board[2][3]}\n'
-                f'{self.board[3][0]} {self.board[3][1]} {self.board[3][2]}'
-                f' {self.board[3][3]}\n')
+        return (f'{self.board[0][0]} {self.board[0][1]} {self.board[0][2]} '
+                f'{self.board[0][3]}\n'
+                f'{self.board[1][0]} {self.board[1][1]} {self.board[1][2]} '
+                f'{self.board[1][3]}\n'
+                f'{self.board[2][0]} {self.board[2][1]} {self.board[2][2]} '
+                f'{self.board[2][3]}\n'
+                f'{self.board[3][0]} {self.board[3][1]} {self.board[3][2]} '
+                f'{self.board[3][3]}')
 
     def __getitem__(self, indices):
         """
@@ -68,14 +70,23 @@ class Board:
         else:
             self.board[indices[0]][indices[1]].value = new_value
 
-    def reset(self):
+    def reset(self, board):
         self.filled = False
         self.board = [[Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)]]
+        self.last_board = None
+        self.score = 0
+        self.possible_moves = None
+        self.changes = []
+        if board is not None:
+            self.set(board)
+        else:
+            for _ in range(self.START_BOX):
+                self.generate()
 
-    def set(self, b):
+    def set(self, b) -> None:
         self.board = [[Node(b[0, 0]), Node(b[0, 1]),
                        Node(b[0, 2]), Node(b[0, 3])],
                       [Node(b[1, 0]), Node(b[1, 1]),
@@ -85,8 +96,8 @@ class Board:
                       [Node(b[3, 0]), Node(b[3, 1]),
                        Node(b[3, 2]), Node(b[3, 3])]]
 
-    def get(self):
-        board = np.zeros(self.BOARD_SHAPE)
+    def get(self) -> np.ndarray:
+        board = np.zeros(self.BOARD_SHAPE, dtype=np.int32)
         for i in range(self.BOARD_SHAPE[0]):
             for j in range(self.BOARD_SHAPE[1]):
                 board[i, j] = self.board[i][j].value
@@ -108,40 +119,64 @@ class Board:
         return not self.filled
 
     def is_full(self):
+        self.filled = True
         for i in range(4):
             for j in range(4):
                 if self.board[i][j].value == 0:
                     self.filled = False
                     return self.filled
-        self.filled = True
         return self.filled
 
 
 class Engine:
 
     def __init__(self) -> None:
-        self.last_board = None
-        self.current_board = None
-        self.changes = []
+        self.board = None
 
-    def move(self, board: Board, move_dir) -> None:
-        self.changes.clear()
-        self.last_board = copy.deepcopy(board)
-        self.current_board = board
-        if move_dir == UP:
-            self.up()
-        elif move_dir == DOWN:
-            self.down()
-        elif move_dir == LEFT:
-            self.left()
-        elif move_dir == RIGHT:
-            self.right()
+    def move(self, board: Board, dir) -> bool:
+        self.board = board
+        if dir != UNDO:
+            # required for not exceeding maximum recursion depth
+            board.last_board = None
+            self.board.last_board = copy.deepcopy(board)
+        self.board.changes.clear()
+        if dir == UP:
+            self.board.score += self.up()
+        elif dir == DOWN:
+            self.board.score += self.down()
+        elif dir == LEFT:
+            self.board.score += self.left()
+        elif dir == RIGHT:
+            self.board.score += self.right()
+        elif dir == UNDO:
+            return self.undo()
+        if len(self.board.changes) > 0:
+            if not self.board.is_full():
+                self.board.generate()
+            changes_tmp = self.board.changes.copy()
+            self.get_possible_moves()
+            self.board.changes = changes_tmp.copy()
+            return True
+        return False
+
+    def undo(self, full=True):
+        if self.board.last_board is not None:
+            self.board.changes = self.board.last_board.changes.copy()
+            if full:
+                self.board.set(self.board.last_board.get())  # revert board
+                self.board.score = self.board.last_board.score  # revert score
+                self.board.last_board = None  # Delete last board after UNDO
+                self.get_possible_moves()
+            return True
+        else:
+            return False
 
     def up(self):
+        __score = 0
         for i in range(4):
             row_modif = False
             for j in range(1, 4, 1):
-                if self.current_board[j, i] != 0:
+                if self.board[j, i] != 0:
                     modif = False
                     start_index = [j, i]
                     stop_index = [j, i]
@@ -149,31 +184,38 @@ class Engine:
                         if j >= 1:
                             if j == 1 and row_modif and not modif:
                                 break
-                            elif self.current_board[j-1, i] == \
-                                    self.current_board[j, i] and not modif:
-                                self.current_board[j-1, i] = \
-                                    self.current_board[j, i]*2
-                                self.current_board[j, i] = 0
+                            elif self.board[j-1, i] == \
+                                    self.board[j, i] and not modif:
+                                self.board[j-1, i] = \
+                                    self.board[j, i]*2
+                                __score += self.board[j, i]*2
+                                self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
                                 stop_index = [j-1, i]
-                            elif self.current_board[j-1, i] == 0:
-                                self.current_board[j-1, i] = \
-                                    self.current_board[j, i]
-                                self.current_board[j, i] = 0
+                            elif self.board[j-1, i] == 0:
+                                self.board[j-1, i] = \
+                                    self.board[j, i]
+                                self.board[j, i] = 0
                                 stop_index = [j-1, i]
                             j -= 1
                         else:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
-                        self.changes.append([start_index, stop_index, UP])
+                        self.board.changes.append([start_index,
+                                                   stop_index, UP])
+                    else:
+                        self.board.changes.append([start_index,
+                                                   stop_index, INPLACE])
+        return __score
 
     def down(self):
+        __score = 0
         for i in range(4):
             row_modif = False
             for j in range(3, -1, -1):
-                if self.current_board[j, i] != 0:
+                if self.board[j, i] != 0:
                     modif = False
                     start_index = [j, i]
                     stop_index = [j, i]
@@ -181,31 +223,38 @@ class Engine:
                         try:
                             if j == 2 and row_modif and not modif:
                                 break
-                            elif self.current_board[j+1, i] == \
-                                    self.current_board[j, i] and not modif:
-                                self.current_board[j+1, i] = \
-                                    self.current_board[j, i]*2
-                                self.current_board[j, i] = 0
+                            elif self.board[j+1, i] == \
+                                    self.board[j, i] and not modif:
+                                self.board[j+1, i] = \
+                                    self.board[j, i]*2
+                                __score += self.board[j, i]*2
+                                self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
                                 stop_index = [j+1, i]
-                            elif self.current_board[j+1, i] == 0:
-                                self.current_board[j+1, i] = \
-                                    self.current_board[j, i]
-                                self.current_board[j, i] = 0
+                            elif self.board[j+1, i] == 0:
+                                self.board[j+1, i] = \
+                                    self.board[j, i]
+                                self.board[j, i] = 0
                                 stop_index = [j+1, i]
                             j += 1
                         except IndexError:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
-                        self.changes.append([start_index, stop_index, DOWN])
+                        self.board.changes.append([start_index,
+                                                   stop_index, DOWN])
+                    else:
+                        self.board.changes.append([start_index,
+                                                   stop_index, INPLACE])
+        return __score
 
-    def right(self):
+    def left(self):
+        __score = 0
         for j in range(4):
             row_modif = False
             for i in range(1, 4, 1):
-                if self.current_board[j, i] != 0:
+                if self.board[j, i] != 0:
                     modif = False
                     start_index = [j, i]
                     stop_index = [j, i]
@@ -213,31 +262,38 @@ class Engine:
                         if i >= 1:
                             if i == 1 and row_modif and not modif:
                                 break
-                            elif self.current_board[j, i-1] == \
-                                    self.current_board[j, i] and not modif:
-                                self.current_board[j, i-1] = \
-                                    self.current_board[j, i]*2
-                                self.current_board[j, i] = 0
+                            elif self.board[j, i-1] == \
+                                    self.board[j, i] and not modif:
+                                self.board[j, i-1] = \
+                                    self.board[j, i]*2
+                                __score += self.board[j, i]*2
+                                self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
                                 stop_index = [j, i-1]
-                            elif self.current_board[j, i-1] == 0:
-                                self.current_board[j, i-1] = \
-                                    self.current_board[j, i]
-                                self.current_board[j, i] = 0
+                            elif self.board[j, i-1] == 0:
+                                self.board[j, i-1] = \
+                                    self.board[j, i]
+                                self.board[j, i] = 0
                                 stop_index = [j, i-1]
                             i -= 1
                         else:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
-                        self.changes.append([start_index, stop_index, RIGHT])
+                        self.board.changes.append([start_index,
+                                                   stop_index, LEFT])
+                    else:
+                        self.board.changes.append([start_index,
+                                                   stop_index, INPLACE])
+        return __score
 
-    def left(self):
+    def right(self):
+        __score = 0
         for j in range(4):
             row_modif = False
             for i in range(3, -1, -1):
-                if self.current_board[j, i] != 0:
+                if self.board[j, i] != 0:
                     modif = False
                     start_index = [j, i]
                     stop_index = [j, i]
@@ -245,22 +301,70 @@ class Engine:
                         try:
                             if i == 2 and row_modif and not modif:
                                 break
-                            elif self.current_board[j, i+1] == \
-                                    self.current_board[j, i] and not modif:
-                                self.current_board[j, i+1] = \
-                                    self.current_board[j, i] * 2
-                                self.current_board[j, i] = 0
+                            elif self.board[j, i+1] == \
+                                    self.board[j, i] and not modif:
+                                self.board[j, i+1] = \
+                                    self.board[j, i] * 2
+                                __score += self.board[j, i]*2
+                                self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
                                 stop_index = [j, i+1]
-                            elif self.current_board[j, i+1] == 0:
-                                self.current_board[j, i+1] = \
-                                    self.current_board[j, i]
-                                self.current_board[j, i] = 0
+                            elif self.board[j, i+1] == 0:
+                                self.board[j, i+1] = \
+                                    self.board[j, i]
+                                self.board[j, i] = 0
                                 stop_index = [j, i+1]
                             i += 1
                         except IndexError:
                             break
                     if start_index[0] != stop_index[0] or \
                             start_index[1] != stop_index[1]:
-                        self.changes.append([start_index, stop_index, LEFT])
+                        self.board.changes.append([start_index,
+                                                   stop_index, RIGHT])
+                    else:
+                        self.board.changes.append([start_index,
+                                                   stop_index, INPLACE])
+        return __score
+
+    def get_possible_moves(self, board=None):
+        moves = []
+        if board is not None:
+            self.board = board
+        self.board.changes.clear()
+        start = self.board.get()  # Get copy of main board values
+        for action in range(ACTION_SPACE):
+            if action == UP:
+                self.up()
+            elif action == DOWN:
+                self.down()
+            elif action == LEFT:
+                self.left()
+            elif action == RIGHT:
+                self.right()
+            elif action == UNDO:
+                self.undo(full=False)
+            if len(self.board.changes) > 0:
+                moves.append(action)
+                self.board.changes.clear()
+            self.board.set(start)  # Revert back to main board values
+        if len(moves) > 0:
+            self.board.possible_moves = moves.copy()
+            return moves
+        self.board.possible_moves = None
+        return None
+
+    def game_end(self, board: Board):
+        for i in range(3):
+            for j in range(4):
+                if board[i][j] == [i+1][j] or \
+                        board[i][j] == 0:
+                    return False
+        for i in range(4):
+            for j in range(3):
+                if board[i][j] == board[i][j+1] or \
+                        board[i][j] == 0:
+                    return False
+        if board[3][3] == 0:
+            return False
+        return True

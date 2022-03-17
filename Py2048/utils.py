@@ -1,8 +1,8 @@
-import pygame_base as pgb
+import PyGame as pg
 import pygame
 
 
-class Color(pgb.Color):
+class Colors(pg.Color):
 
     BG = pygame.Color(187, 173, 160)
     BOX_EMPTY = pygame.Color(214, 205, 196)
@@ -36,11 +36,3 @@ class Color(pgb.Color):
 
     def __getitem__(self, indices):
         return self.__COLORS[indices]
-
-
-LEFT = 0
-RIGHT = 1
-UP = 2
-DOWN = 3
-UNDO = 4  # Experimantal
-ACTION_SPACE = 4

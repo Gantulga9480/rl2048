@@ -8,7 +8,7 @@ import random
 import numpy as np
 import os
 from datetime import datetime as dt
-from deepgame import DeepGame, Utils
+from old_game.deepgame import DeepGame, Utils
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
