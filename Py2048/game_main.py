@@ -82,7 +82,7 @@ class Py2048(PyGame):
                 self.draw_end_screen()
 
     def draw_board(self, animation=False):
-        if not animation or self.game_board.changes.__len__() == 0:
+        if not animation or not self.game_engine.changed:
             for i in range(self.game_board.BOARD_SHAPE[0]):
                 for j in range(self.game_board.BOARD_SHAPE[1]):
                     node_value = self.game_board[i, j]
@@ -121,7 +121,7 @@ class Py2048(PyGame):
         done = [False for _ in animation_list]
         while True:
             if all(done):
-                self.game_board.changes.clear()
+                self.game_engine.changed = False
                 break
             self.game_window.fill(self.color.BG)
             for i in range(self.game_board.BOARD_SHAPE[0]):

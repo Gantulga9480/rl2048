@@ -1,6 +1,8 @@
 import numpy as np
 import random
 import copy
+from collections import deque
+from typing import Any
 
 UP = 0
 DOWN = 1
@@ -16,7 +18,7 @@ class Node:
     def __init__(self, value) -> None:
         self.value = value
 
-    def __eq__(self, __o) -> bool:
+    def __eq__(self, __o: object) -> bool:
         if isinstance(__o, Node):
             return __o.value == self.value
         elif isinstance(__o, int):
@@ -40,7 +42,7 @@ class Board:
 
     def __init__(self, board=None) -> None:
         """
-        If board is present, initialize game board from pre-defined values.
+        If board is present, rootize game board from pre-defined values.
         Otherwise will generate new board.
         Input shape must be (4, 4).
         """
@@ -55,6 +57,20 @@ class Board:
                 f'{self.board[2][3]}\n'
                 f'{self.board[3][0]} {self.board[3][1]} {self.board[3][2]} '
                 f'{self.board[3][3]}')
+
+    def __eq__(self, __o: object) -> bool:
+        for i in range(4):
+            for j in range(4):
+                if self.board[i][j].value != __o[i][j].value:
+                    return False
+        return True
+
+    def __ne__(self, __o: object) -> bool:
+        for i in range(4):
+            for j in range(4):
+                if self.board[i][j].value != __o[i][j].value:
+                    return True
+        return False
 
     def __getitem__(self, indices):
         """
@@ -170,15 +186,12 @@ class Engine:
         if self.changed:
             if not self.board.is_full():
                 self.board.generate()
-            changes_tmp = self.board.changes.copy()  # preserve changes
             self.get_possible_moves()
-            self.board.changes = changes_tmp.copy()
             return True
         return False
 
     def undo(self):
         if self.board.last_board is not None:
-            self.board.changes = self.board.last_board.changes.copy()
             self.board.set(self.board.last_board.get())  # revert board
             self.board.score = self.board.last_board.score  # revert score
             self.board.last_board = None  # Delete last board after UNDO
@@ -190,6 +203,7 @@ class Engine:
     def up(self):
         __score = 0
         self.changed = False
+        self.board.changes.clear()
         for i in range(4):
             row_modif = False
             for j in range(1, 4, 1):
@@ -231,6 +245,7 @@ class Engine:
     def down(self):
         __score = 0
         self.changed = False
+        self.board.changes.clear()
         for i in range(4):
             row_modif = False
             for j in range(3, -1, -1):
@@ -272,6 +287,7 @@ class Engine:
     def left(self):
         __score = 0
         self.changed = False
+        self.board.changes.clear()
         for j in range(4):
             row_modif = False
             for i in range(1, 4, 1):
@@ -313,6 +329,7 @@ class Engine:
     def right(self):
         __score = 0
         self.changed = False
+        self.board.changes.clear()
         for j in range(4):
             row_modif = False
             for i in range(3, -1, -1):
@@ -355,8 +372,9 @@ class Engine:
         moves = []
         if board is not None:
             self.board = board
-        self.board.changes.clear()
+        changes_tmp = self.board.changes.copy()  # preserve changes
         start = self.board.get()  # Get copy of main board values
+        changed_state_tmp = self.changed  # preserve changed state
         for action in range(ACTION_SPACE):
             if action == UP:
                 self.up()
@@ -372,10 +390,69 @@ class Engine:
                     self.changed = True
             if self.changed:
                 moves.append(action)
-                self.board.changes.clear()
             self.board.set(start)  # Revert back to main board values
+        self.board.changes = changes_tmp.copy()  # set back to main changes
+        self.changed = changed_state_tmp
         if len(moves) > 0:
             self.board.possible_moves = moves.copy()
             return moves
         self.board.possible_moves = None
         return None
+
+
+class TreeSearch:
+
+    def __init__(self,
+                 root: Any,
+                 executor: object,
+                 target: Any = None,
+                 max_depth: int = 0) -> None:
+        self.buffer = deque()
+        self.executor = executor
+        self.target = target
+        self.max_depth = max_depth
+        self.root = copy.deepcopy(root)
+
+    def expand(self):
+        raise NotImplementedError
+
+    def search(self):
+        raise NotImplementedError
+
+    def unroll(self):
+        raise NotImplementedError
+
+    def get(self):
+        raise NotImplementedError
+
+
+class BredthFirstSearch(TreeSearch):
+
+    def __init__(self,
+                 root: Any,
+                 executor: object,
+                 target: Any = None,
+                 max_depth: int = 0) -> None:
+        super().__init__(root, executor, target, max_depth)
+
+    def get(self):
+        return self.buffer.popleft()
+
+
+class MCTS(BredthFirstSearch):
+
+    def __init__(self,
+                 root: Any,
+                 executor: object,
+                 target: Any = None,
+                 max_depth: int = 0) -> None:
+        super().__init__(root, executor, target, max_depth)
+
+    def select(self):
+        ...
+
+    def expand(self):
+        ...
+
+    def simulate(self):
+        ...
