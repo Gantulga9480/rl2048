@@ -9,8 +9,8 @@ DOWN = 1
 LEFT = 2
 RIGHT = 3
 UNDO = 4  # Experimantal
+ACTION_SPACE = 4
 INPLACE = 5  # For animation
-ACTION_SPACE = 5
 
 
 class Node:
@@ -40,7 +40,7 @@ class Board:
     START_BOX = 2  # Boself.current_boardes to generate at start
     BOARD_SHAPE = (4, 4)
 
-    def __init__(self, board=None) -> None:
+    def __init__(self, board: Any = None) -> None:
         """
         If board is present, rootize game board from pre-defined values.
         Otherwise will generate new board.
@@ -396,63 +396,5 @@ class Engine:
         if len(moves) > 0:
             self.board.possible_moves = moves.copy()
             return moves
-        self.board.possible_moves = None
-        return None
-
-
-class TreeSearch:
-
-    def __init__(self,
-                 root: Any,
-                 executor: object,
-                 target: Any = None,
-                 max_depth: int = 0) -> None:
-        self.buffer = deque()
-        self.executor = executor
-        self.target = target
-        self.max_depth = max_depth
-        self.root = copy.deepcopy(root)
-
-    def expand(self):
-        raise NotImplementedError
-
-    def search(self):
-        raise NotImplementedError
-
-    def unroll(self):
-        raise NotImplementedError
-
-    def get(self):
-        raise NotImplementedError
-
-
-class BredthFirstSearch(TreeSearch):
-
-    def __init__(self,
-                 root: Any,
-                 executor: object,
-                 target: Any = None,
-                 max_depth: int = 0) -> None:
-        super().__init__(root, executor, target, max_depth)
-
-    def get(self):
-        return self.buffer.popleft()
-
-
-class MCTS(BredthFirstSearch):
-
-    def __init__(self,
-                 root: Any,
-                 executor: object,
-                 target: Any = None,
-                 max_depth: int = 0) -> None:
-        super().__init__(root, executor, target, max_depth)
-
-    def select(self):
-        ...
-
-    def expand(self):
-        ...
-
-    def simulate(self):
-        ...
+        self.board.possible_moves = []
+        return []

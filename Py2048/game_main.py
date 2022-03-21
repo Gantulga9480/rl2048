@@ -49,7 +49,6 @@ class Py2048(PyGame):
 
     def USR_setup(self):
         self.backgroundColor = self.color.BG
-        self.game_engine.get_possible_moves(self.game_board)
 
     def USR_eventHandler(self):
         for event in self.events:
@@ -76,10 +75,10 @@ class Py2048(PyGame):
 
     def USR_render(self):
         if self.rendering:
-            if not self.over:
-                self.draw_board(animation=True)
-            elif self.over:
-                self.draw_end_screen()
+            # if not self.over:
+            self.draw_board(animation=False)
+            # elif self.over:
+            #     self.draw_end_screen()
 
     def draw_board(self, animation=False):
         if not animation or not self.game_engine.changed:
