@@ -91,7 +91,7 @@ class Board:
                       [Node(0), Node(0), Node(0), Node(0)]]
         self.last_board = None
         self.score = 0
-        self.possible_moves = None
+        self.possible_moves = []
         self.changes = []
         self.empty_boxes = []
         if board is not None:
@@ -110,6 +110,14 @@ class Board:
                        Node(b[2, 2]), Node(b[2, 3])],
                       [Node(b[3, 0]), Node(b[3, 1]),
                        Node(b[3, 2]), Node(b[3, 3])]]
+
+    def set_all(self, board):
+        self.set(board.get())
+        self.score = board.score
+        self.possible_moves = copy.deepcopy(board.possible_moves)
+        self.changes = copy.deepcopy(board.changes)
+        self.empty_boxes = copy.deepcopy(board.empty_boxes)
+        self.last_board = copy.deepcopy(board.last_board)
 
     def get(self) -> np.ndarray:
         board = np.zeros(self.BOARD_SHAPE, dtype=np.int32)

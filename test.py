@@ -46,43 +46,43 @@ class MCTS(BredthFirstSearch):
 
     def search(self):
         while True:
-            sample = self.get()
-            if sample.layer != self.max_depth:
-                # print(sample.layer)
-                self.expand(sample)
+            node = self.get()
+            if node is not None:
+                if node.layer < self.max_depth:
+                    if node.possible_moves:
+                        self.expand(node)
+                else:
+                    self.buffer.insert(0, node)
+                    break
             else:
-                self.buffer.insert(0, sample)
                 break
         return self.select()
 
     def select(self):
-        layer_num = self.buffer[-1].layer
         child_nodes = []
         scores = []
         while True:
-            try:
-                if self.buffer[-1].layer == self.max_depth:
-                    child = self.get()
-                    scores.append(self.simulate(child))
-                    child_nodes.append(child)
+            node = self.get()
+            if node is not None:
+                if node.possible_moves:
+                    scores.append(self.simulate(node))
                 else:
-                    break
-            except IndexError:
+                    scores.append(0)
+                child_nodes.append(node)
+            else:
                 break
-        if len(scores) > 0:
-            # action = child_nodes[np.argmax(scores)].parent_action
-            action = child_nodes[np.argmax(scores)].unroll()
-            print('Tree traversal:', action)
-            return action[0]
+        if scores:
+            actions = child_nodes[np.argmax(scores)].unroll()
+            print('Tree traversal:', actions)
+            return actions
         return None
 
     def expand(self, parent: BoardTree):
         for action in parent.possible_moves:
-            if self.executor.move(copy.deepcopy(parent), action):
+            parent_tmp = copy.deepcopy(parent)
+            if self.executor.move(parent_tmp, action):
                 new_node = BoardTree(parent, action)
-                new_node.set(self.executor.board.get())
-                new_node.score = self.executor.board.score
-                new_node.possible_moves = parent.possible_moves.copy()
+                new_node.set_all(parent_tmp)
                 self.append(new_node)
 
     def simulate(self, node: BoardTree):
@@ -97,26 +97,26 @@ class Test(game.Py2048):
         bt = BoardTree()
         bt.set(self.game_board.get())
         bt.possible_moves = self.game_board.possible_moves.copy()
-        self.tree = MCTS(root=bt, executor=game.Engine(), max_depth=3)
+        self.tree = MCTS(root=bt, executor=game.Engine(), max_depth=1)
+        self.actions = []
 
     def loop_start(self):
         if not self.over:
-            try:
-                action = self.tree.search()
-                # action = random.choice(self.game_board.possible_moves)
-                self.LOG(f'Selected action: {action}')
-                self.step(action)
-            except Exception:
-                self.over = True
-                # self.running = False
+            # action = random.choice(self.game_board.possible_moves)
+            if not self.actions:
+                self.actions = self.tree.search()
+            if not self.actions:
+                action = random.choice(self.game_board.possible_moves)
+            action = self.actions.pop(0)
+            self.LOG(f'Selected action: {action}')
+            self.step(action)
             if self.over:
                 self.LOG(f'Final score: {self.game_board.score}')
-            self.LOG(f'Possible moves: {self.game_board.possible_moves}')
-            new_root = BoardTree()
-            new_root.set(self.game_board.get())
-            new_root.possible_moves = self.game_board.possible_moves.copy()
-            new_root.score = self.game_board.score
-            self.tree.append(new_root)
+            else:
+                self.LOG(f'Possible moves: {self.game_board.possible_moves}')
+                new_root = BoardTree()
+                new_root.set_all(self.game_board)
+                self.tree.append(new_root)
 
 
 t = Test()

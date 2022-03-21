@@ -39,7 +39,10 @@ class BredthFirstSearch(TreeSearch):
         super().__init__(root, executor, target, max_depth)
 
     def get(self):
-        return self.buffer.popleft()
+        try:
+            return self.buffer.popleft()
+        except IndexError:
+            return None
 
     def append(self, node):
         self.buffer.append(node)

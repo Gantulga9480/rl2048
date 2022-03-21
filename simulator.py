@@ -12,9 +12,7 @@ class Py2048Simulator:
     def run(self, board, itr=0):
         counter = 0
         self.over = False
-        self.game_board.set(board.get())
-        self.game_board.possible_moves = board.possible_moves.copy()
-        self.game_board.score = board.score
+        self.game_board.set_all(board)
         while counter < itr and not self.over:
             counter += 1
             move = random.choice(self.game_board.possible_moves)
