@@ -56,7 +56,7 @@ class Board:
                 f'{self.board[2][0]} {self.board[2][1]} {self.board[2][2]} '
                 f'{self.board[2][3]}\n'
                 f'{self.board[3][0]} {self.board[3][1]} {self.board[3][2]} '
-                f'{self.board[3][3]}')
+                f'{self.board[3][3]}\n')
 
     def __eq__(self, __o: object) -> bool:
         for i in range(4):

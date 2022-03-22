@@ -4,19 +4,23 @@ import random
 
 class Py2048Simulator:
 
-    def __init__(self) -> None:
+    def __init__(self, sim_number) -> None:
         self.over = False
         self.game_board = Board()
         self.game_engine = Engine()
+        self.sim_number = sim_number
 
-    def run(self, board, itr=0):
+    def run(self, board):
         counter = 0
         self.over = False
         self.game_board.set_all(board)
-        while counter != itr and not self.over:
+        while counter != self.sim_number and not self.over:
             counter += 1
-            move = random.choice(self.game_board.possible_moves)
-            self.step(move)
+            try:
+                move = random.choice(self.game_board.possible_moves)
+                self.step(move)
+            except IndexError:
+                break
         return self.game_board.score
 
     def step(self, dir):

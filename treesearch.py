@@ -47,17 +47,8 @@ class BredthFirstSearch(TreeSearch):
                  max_depth: int = 0) -> None:
         super().__init__(root, executor, target, max_depth)
 
-    def search(self):
-        while True:
-            node = self.get()
-            if node is not None:
-                if node.layer < self.max_depth or node == self.target:
-                    self.expand(node)
-                else:
-                    self.append(node)  # put back node to tree
-                    break
-            else:
-                break
+    def select(self):
+        ...
 
     def get(self):
         try:
