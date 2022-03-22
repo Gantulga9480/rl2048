@@ -38,6 +38,9 @@ class PyGame:
         self.__is_eventHandler = True
         self.__is_render = True
 
+        # Utils
+        self.log = True
+
     def __del__(self):
         pg.quit()
 
@@ -125,6 +128,10 @@ class PyGame:
             pg.display.update()
         self.clock.tick(self.fps)
 
+    def LOG(self, msg, level: str = DEBUG):
+        if self.log:
+            print(f'[{level}]: {msg}')
+
     @staticmethod
     def set_title(title: str):
         pg.display.set_caption(title)
@@ -133,7 +140,3 @@ class PyGame:
     def get_window(width: int, height: int):
         """ Avoid calling outside of PyGameBase instance """
         return pg.display.set_mode((width, height))
-
-    @staticmethod
-    def LOG(msg, level: str = DEBUG):
-        print(f'[{level}]: {msg}')

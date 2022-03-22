@@ -9,7 +9,7 @@ DOWN = 1
 LEFT = 2
 RIGHT = 3
 UNDO = 4  # Experimantal
-ACTION_SPACE = 4
+ACTION_SPACE = 4  # 5 for +UNDO
 INPLACE = 5  # For animation
 
 
@@ -61,7 +61,10 @@ class Board:
     def __eq__(self, __o: object) -> bool:
         for i in range(4):
             for j in range(4):
-                if self.board[i][j].value != __o[i][j].value:
+                try:
+                    if self.board[i][j].value != __o[i][j].value:
+                        return False
+                except TypeError:
                     return False
         return True
 
@@ -84,7 +87,7 @@ class Board:
         else:
             self.board[indices[0]][indices[1]].value = new_value
 
-    def reset(self, board):
+    def reset(self, board=None):
         self.board = [[Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],

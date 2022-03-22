@@ -13,9 +13,10 @@ class Py2048(PyGame):
     BOX_PAD = WIDTH % 100
     BOX = (WIDTH - BOX_PAD) // 4
     FPS = 120
-    SPEED_FAST = (WIDTH - BOX - BOX_PAD) // (FPS//10)
-    SPEED_MEDIUM = (WIDTH - BOX * 2 - BOX_PAD) // (FPS//10)
-    SPEED_SLOW = (WIDTH - BOX * 3 - BOX_PAD) // (FPS//10)
+    SPEED_FACTOR = 10  # higher value means faster animation
+    SPEED_FAST = (WIDTH - BOX - BOX_PAD) // (FPS//SPEED_FACTOR)
+    SPEED_MEDIUM = (WIDTH - BOX * 2 - BOX_PAD) // (FPS//SPEED_FACTOR)
+    SPEED_SLOW = (WIDTH - BOX * 3 - BOX_PAD) // (FPS//SPEED_FACTOR)
     SPEEDS = [1, SPEED_SLOW, SPEED_MEDIUM, SPEED_FAST]
     POSITION = [[[BOX_PAD+BOX*0, BOX_PAD+BOX*0],
                  [BOX_PAD+BOX*1, BOX_PAD+BOX*0],
@@ -64,7 +65,7 @@ class Py2048(PyGame):
                 elif event.key == pygame.K_u:
                     self.step(UNDO)
                 elif event.key == pygame.K_r:
-                    self.game_board.reset()
+                    self.reset()
 
     def step(self, dir):
         if dir in self.game_board.possible_moves:
@@ -73,12 +74,15 @@ class Py2048(PyGame):
             self.LOG('Impossible move!')
         self.over = not self.game_board.available()
 
+    def reset(self):
+        ...
+
     def USR_render(self):
         if self.rendering:
             # if not self.over:
-            self.draw_board(animation=False)
-            # elif self.over:
-            #     self.draw_end_screen()
+            self.draw_board(animation=True)
+            if self.over:
+                self.draw_end_screen()
 
     def draw_board(self, animation=False):
         if not animation or not self.game_engine.changed:

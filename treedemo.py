@@ -4,7 +4,8 @@ from itertools import zip_longest
 
 class dummy:
 
-    def __init__(self, iteration=None, parent=None, parent_action=None) -> None:
+    def __init__(self, iteration=None,
+                 parent=None, parent_action=None) -> None:
         self.iteration = iteration
         self.parent = parent
         self.actions = ['1', '2']
@@ -26,12 +27,15 @@ class tree:
             self.buff.append(self.create_child(node, action))
 
     def create_child(self, parent: dummy, action):
-        return dummy(parent=parent, iteration=parent.iteration + action, parent_action=action)
+        return dummy(parent=parent,
+                     iteration=parent.iteration + action,
+                     parent_action=action)
 
     def search(self):
         while True:
             sample = self.buff.popleft()
-            if sample.iteration == self.target or sample.depth == len(self.target)+1:
+            if sample.iteration == self.target or \
+                    sample.depth == len(self.target)+1:
                 return sample
             else:
                 self.expand(sample)

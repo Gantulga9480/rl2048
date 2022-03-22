@@ -16,16 +16,25 @@ class TreeSearch:
         self.buffer = deque()
         self.buffer.append(self.root)
 
-    def expand(self):
+    def search(self):
         raise NotImplementedError
 
-    def search(self):
+    def expand(self):
         raise NotImplementedError
 
     def unroll(self):
         raise NotImplementedError
 
     def get(self):
+        raise NotImplementedError
+
+    def append(self):
+        raise NotImplementedError
+
+    def reset(self):
+        raise NotImplementedError
+
+    def get_layer(self):
         raise NotImplementedError
 
 
@@ -38,6 +47,18 @@ class BredthFirstSearch(TreeSearch):
                  max_depth: int = 0) -> None:
         super().__init__(root, executor, target, max_depth)
 
+    def search(self):
+        while True:
+            node = self.get()
+            if node is not None:
+                if node.layer < self.max_depth or node == self.target:
+                    self.expand(node)
+                else:
+                    self.append(node)  # put back node to tree
+                    break
+            else:
+                break
+
     def get(self):
         try:
             return self.buffer.popleft()
@@ -46,3 +67,10 @@ class BredthFirstSearch(TreeSearch):
 
     def append(self, node):
         self.buffer.append(node)
+
+    def reset(self, root=None):
+        self.buffer.clear()
+        self.root = None
+        if root is not None:
+            self.root = root
+            self.append(self.root)
