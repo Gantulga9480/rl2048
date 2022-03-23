@@ -47,6 +47,7 @@ class Py2048(PyGame):
         self.game_board = Board()
         self.game_engine = Engine()
         self.color = Colors()
+        self.game_engine.get_possible_moves(self.game_board)
 
     def USR_setup(self):
         self.backgroundColor = self.color.BG

@@ -1,4 +1,4 @@
-from old_game.deepgame import DeepGame
+from deepgame import DeepGame
 import os
 import numpy as np
 from tensorflow.keras.models import load_model

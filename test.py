@@ -54,17 +54,16 @@ class MCTS(BredthFirstSearch):
         self.simulator = Py2048Simulator(sim_num)
         self.depth = 0
 
-    """
     def search(self):
         self.depth = 0
         self.expand(0)  # expand root first
         while self.depth < self.max_depth:
             if not self.traverse(0):  # start from top node
                 break
-        next_layer = self.get_layer(1)
+        next_layer = self.get_layer(self.root.layer + 1)
         score = [self.buffer[i].value for i in next_layer]
         best_node = self.buffer[next_layer[np.argmax(score)]]
-        return best_node.unroll()[0]
+        return best_node.unroll()[0][0]
 
     def traverse(self, index):
         print('Traverse')
@@ -130,7 +129,7 @@ class MCTS(BredthFirstSearch):
             parent.visit_count += 1
             parent = parent.parent
 
-    def UCB1(self, N, n, value, C=1):
+    def UCB1(self, N, n, value, C=0):
         result = value / (n+0.000000001) + \
             C * np.sqrt(2 * np.log(N) / (n+0.000000001))
         return result
@@ -141,22 +140,21 @@ class MCTS(BredthFirstSearch):
             if self.buffer[i].layer == level:
                 layer.append(i)
         return layer
-    """
 
-    def search(self):
+    def search1(self):
         while True:
             node = self.get()
             if node is not None:
                 if node.layer < self.max_depth:
-                    self.expand(node)
+                    self.expand1(node)
                 else:
                     self.append(node)  # put back node to tree
                     break
             else:
                 break
-        return self.select()
+        return self.select1()
 
-    def select(self):
+    def select1(self):
         child_nodes = []
         scores = []
         while True:
@@ -177,7 +175,7 @@ class MCTS(BredthFirstSearch):
             return actions[0]
         return None
 
-    def expand(self, parent: BoardTree):
+    def expand1(self, parent: BoardTree):
         for action in parent.possible_moves:
             parent_tmp = copy.deepcopy(parent)
             if self.executor.move(parent_tmp, action):
@@ -193,14 +191,13 @@ class Test(game.Py2048):
 
     def __init__(self, render: bool = True) -> None:
         super().__init__(render=render)
-        self.game_engine.get_possible_moves(self.game_board)
         root = BoardTree()
         root.visit_count = 1
         root.set_all(self.game_board)
         self.tree = MCTS(root=root, executor=game.Engine(),
-                         max_depth=2, sim_num=20)
+                         max_depth=5, sim_num=10)
         self.count = 0
-        self.log = False
+        self.log = True
 
     def loop_start(self):
         if not self.over:
