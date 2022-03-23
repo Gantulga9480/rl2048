@@ -54,7 +54,6 @@ class MCTS(BredthFirstSearch):
         self.simulator = Py2048Simulator(sim_num)
         self.depth = 0
 
-    """
     def search(self):
         self.depth = 0
         self.expand(0)  # expand root first
@@ -64,13 +63,11 @@ class MCTS(BredthFirstSearch):
         next_layer = self.get_layer(1)
         score = [self.buffer[i].value for i in next_layer]
         best_node = self.buffer[next_layer[np.argmax(score)]]
-        return best_node.unroll()[0]
+        return best_node.unroll()[0][0]
 
     def traverse(self, index):
-        print('Traverse')
         node = self.buffer[index]
         if node.visit_count == 0:
-            print('Simulate')
             sim_result = self.simulate(node)
             self.backprob(node, sim_result)
             return True
@@ -79,15 +76,10 @@ class MCTS(BredthFirstSearch):
                 selected_node = self.select(index)
                 return self.traverse(selected_node)
             elif node.visit_count == 1:  # just simulated
-                print('Expand')
-                self.expand(index)
-                return True
-            else:
-                return False
+                return self.expand(index)
         return False
 
     def select(self, index):
-        # print('select')
         node = self.buffer[index]
         ind = node.children_indexs
         scores = []
@@ -96,14 +88,12 @@ class MCTS(BredthFirstSearch):
             p_N = node.visit_count
             c_n = child.visit_count
             val = child.value
-            ucb = self.UCB1(p_N, c_n, val)
-            # print(p_N, c_n, val, ucb)
-            scores.append(ucb)
+            ucb_score = self.UCB1(p_N, c_n, val)
+            scores.append(ucb_score)
         same = True
         for score in scores:
             if score != scores[0]:
                 same = False
-        # print(score)
         if not same:
             return ind[np.argmax(scores)]
         else:
@@ -112,16 +102,20 @@ class MCTS(BredthFirstSearch):
     def expand(self, parent_index):
         parent = self.buffer[parent_index]
         parent.children_indexs.clear()
-        for action in parent.possible_moves:
-            parent_tmp = copy.deepcopy(parent)
-            if self.executor.move(parent_tmp, action):
-                new_node = BoardTree(parent=parent,
-                                     parent_index=parent_index,
-                                     action=action)
-                new_node.set_all(parent_tmp)
-                self.depth = new_node.layer
-                self.append(new_node)
-                parent.children_indexs.append(self.buffer.__len__() - 1)
+        if parent.possible_moves:
+            for action in parent.possible_moves:
+                parent_tmp = copy.deepcopy(parent)
+                if self.executor.move(parent_tmp, action):
+                    new_node = BoardTree(parent=parent,
+                                         parent_index=parent_index,
+                                         action=action)
+                    new_node.set_all(parent_tmp)
+                    self.depth = new_node.layer
+                    self.append(new_node)
+                    parent.children_indexs.append(self.buffer.__len__() - 1)
+            return True
+        else:
+            return False
 
     def backprob(self, node, value):
         parent = node
@@ -130,9 +124,11 @@ class MCTS(BredthFirstSearch):
             parent.visit_count += 1
             parent = parent.parent
 
-    def UCB1(self, N, n, value, C=1):
-        result = value / (n+0.000000001) + \
-            C * np.sqrt(2 * np.log(N) / (n+0.000000001))
+    def UCB1(self, N, n, value, C=10):
+        if n == 0:
+            result = 1_000_000
+        else:
+            result = value / (n) + C * np.sqrt(np.log(N) / (n))
         return result
 
     def get_layer(self, level):
@@ -141,22 +137,21 @@ class MCTS(BredthFirstSearch):
             if self.buffer[i].layer == level:
                 layer.append(i)
         return layer
-    """
 
-    def search(self):
+    def search1(self):
         while True:
             node = self.get()
             if node is not None:
                 if node.layer < self.max_depth:
-                    self.expand(node)
+                    self.expand1(node)
                 else:
                     self.append(node)  # put back node to tree
                     break
             else:
                 break
-        return self.select()
+        return self.select1()
 
-    def select(self):
+    def select1(self):
         child_nodes = []
         scores = []
         while True:
@@ -173,11 +168,10 @@ class MCTS(BredthFirstSearch):
                 break
         if scores:
             actions, _ = child_nodes[np.argmax(scores)].unroll()
-            print('Tree traversal:', actions)
             return actions[0]
         return None
 
-    def expand(self, parent: BoardTree):
+    def expand1(self, parent: BoardTree):
         for action in parent.possible_moves:
             parent_tmp = copy.deepcopy(parent)
             if self.executor.move(parent_tmp, action):
@@ -198,7 +192,7 @@ class Test(game.Py2048):
         root.visit_count = 1
         root.set_all(self.game_board)
         self.tree = MCTS(root=root, executor=game.Engine(),
-                         max_depth=2, sim_num=20)
+                         max_depth=2, sim_num=5)
         self.count = 0
         self.log = False
 
@@ -207,8 +201,7 @@ class Test(game.Py2048):
             if self.count > 2:
                 self.count = 0
                 # action = random.choice(self.game_board.possible_moves)
-                action = self.tree.search()
-                # print(action)
+                action = self.tree.search1()
                 if not action:
                     action = random.choice(self.game_board.possible_moves)
                 self.LOG(f'Selected action: {action}')
