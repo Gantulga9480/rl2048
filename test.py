@@ -128,7 +128,7 @@ class MCTS(BredthFirstSearch):
         if n == 0:
             result = 1_000_000
         else:
-            result = value / (n) + C * np.sqrt(np.log(N) / (n))
+            result = value + C * np.sqrt(np.log(N) / (n))
         return result
 
     def get_layer(self, level):
@@ -192,7 +192,7 @@ class Test(game.Py2048):
         root.visit_count = 1
         root.set_all(self.game_board)
         self.tree = MCTS(root=root, executor=game.Engine(),
-                         max_depth=2, sim_num=5)
+                         max_depth=3, sim_num=0)
         self.count = 0
         self.log = False
 
