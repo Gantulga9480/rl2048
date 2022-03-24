@@ -95,7 +95,7 @@ class Board:
         self.last_board = None
         self.score = 0
         self.last_score = 0
-        self.possible_moves = []
+        self.possible_actions = []
         self.changes = []
         self.empty_boxes = []
         if board is not None:
@@ -119,7 +119,7 @@ class Board:
         self.set(board.get())
         self.score = board.score
         self.last_score = board.last_score
-        self.possible_moves = copy.deepcopy(board.possible_moves)
+        self.possible_actions = copy.deepcopy(board.possible_actions)
         self.changes = copy.deepcopy(board.changes)
         self.empty_boxes = copy.deepcopy(board.empty_boxes)
         self.last_board = copy.deepcopy(board.last_board)
@@ -200,7 +200,7 @@ class Engine:
         if self.changed:
             if not self.board.is_full():
                 self.board.generate()
-            self.get_possible_moves()
+            self.get_possible_actions()
             return True
         return False
 
@@ -209,7 +209,7 @@ class Engine:
             self.board.set(self.board.last_board.get())  # revert board
             self.board.score = self.board.last_board.score  # revert score
             self.board.last_board = None  # Delete last board after UNDO
-            self.get_possible_moves()
+            self.get_possible_actions()
             return True
         else:
             return False
@@ -382,7 +382,7 @@ class Engine:
                                                    stop_index, INPLACE])
         return __score
 
-    def get_possible_moves(self, board=None):
+    def get_possible_actions(self, board=None):
         moves = []
         if board is not None:
             self.board = board
@@ -408,7 +408,7 @@ class Engine:
         self.board.changes = changes_tmp.copy()  # set back to main changes
         self.changed = changed_state_tmp
         if len(moves) > 0:
-            self.board.possible_moves = moves.copy()
+            self.board.possible_actions = moves.copy()
             return moves
-        self.board.possible_moves = []
+        self.board.possible_actions = []
         return []

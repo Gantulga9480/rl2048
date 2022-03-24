@@ -19,14 +19,14 @@ class Py2048Simulator:
         while self.counter != self.sim_number and not self.over:
             self.counter += 1
             try:
-                move = random.choice(self.game_board.possible_moves)
+                move = random.choice(self.game_board.possible_actions)
                 self.step(move)
             except IndexError:
                 break
         return self.scoring()
 
     def step(self, dir):
-        if dir in self.game_board.possible_moves:
+        if dir in self.game_board.possible_actions:
             self.game_engine.move(self.game_board, dir)
         self.over = not self.game_board.available()
         return self.over

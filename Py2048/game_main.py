@@ -44,10 +44,10 @@ class Py2048(PyGame):
         super().__init__(title, width, height, fps, render)
         self.font = pygame.font.SysFont("arial", 30, True)
         self.over = False
+        self.color = Colors()
         self.game_board = Board()
         self.game_engine = Engine()
-        self.color = Colors()
-        self.game_engine.get_possible_moves(self.game_board)
+        self.game_engine.get_possible_actions(self.game_board)
 
     def USR_setup(self):
         self.backgroundColor = self.color.BG
@@ -69,7 +69,7 @@ class Py2048(PyGame):
                     self.reset()
 
     def step(self, dir):
-        if dir in self.game_board.possible_moves:
+        if dir in self.game_board.possible_actions:
             self.game_engine.move(self.game_board, dir)
         else:
             self.LOG('Impossible move!')
