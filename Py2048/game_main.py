@@ -12,8 +12,8 @@ class Py2048(PyGame):
     HEIGTH = WIDTH
     BOX_PAD = WIDTH % 100
     BOX = (WIDTH - BOX_PAD) // 4
-    FPS = 120
-    SPEED_FACTOR = 10  # higher value means faster animation
+    FPS = 60
+    SPEED_FACTOR = 8  # higher value means faster animation
     SPEED_FAST = (WIDTH - BOX - BOX_PAD) // (FPS//SPEED_FACTOR)
     SPEED_MEDIUM = (WIDTH - BOX * 2 - BOX_PAD) // (FPS//SPEED_FACTOR)
     SPEED_SLOW = (WIDTH - BOX * 3 - BOX_PAD) // (FPS//SPEED_FACTOR)

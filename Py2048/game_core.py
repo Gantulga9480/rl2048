@@ -119,9 +119,9 @@ class Board:
         self.set(board.get())
         self.score = board.score
         self.last_score = board.last_score
-        self.possible_actions = copy.deepcopy(board.possible_actions)
-        self.changes = copy.deepcopy(board.changes)
-        self.empty_boxes = copy.deepcopy(board.empty_boxes)
+        self.possible_actions = board.possible_actions.copy()
+        self.changes = board.changes.copy()
+        self.empty_boxes = board.empty_boxes.copy()
         self.last_board = copy.deepcopy(board.last_board)
 
     def get(self) -> np.ndarray:
