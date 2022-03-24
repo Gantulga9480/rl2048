@@ -94,6 +94,7 @@ class Board:
                       [Node(0), Node(0), Node(0), Node(0)]]
         self.last_board = None
         self.score = 0
+        self.last_score = 0
         self.possible_moves = []
         self.changes = []
         self.empty_boxes = []
@@ -117,6 +118,7 @@ class Board:
     def set_all(self, board):
         self.set(board.get())
         self.score = board.score
+        self.last_score = board.last_score
         self.possible_moves = copy.deepcopy(board.possible_moves)
         self.changes = copy.deepcopy(board.changes)
         self.empty_boxes = copy.deepcopy(board.empty_boxes)
@@ -181,9 +183,10 @@ class Engine:
         self.board = board
         if dir != UNDO:
             # required for not exceeding maximum recursion depth
-            board.last_board = None
+            self.board.last_board = None
             self.board.last_board = copy.deepcopy(board)
         self.board.changes.clear()
+        self.board.last_score = self.board.score
         if dir == UP:
             self.board.score += self.up()
         elif dir == DOWN:
