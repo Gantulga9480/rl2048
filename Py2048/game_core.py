@@ -40,7 +40,7 @@ class Board:
 
     def __init__(self, board=None) -> None:
         """
-        If board is present, rootize game board from pre-defined values.
+        If board is present, game board from pre-defined values.
         Otherwise will generate new board.
         Input shape must be (4, 4).
         """
@@ -226,6 +226,9 @@ class Engine:
                         if j >= 1:
                             if j == 1 and row_modif and not modif:
                                 break
+                            elif j == 2 and row_modif and not modif and \
+                                    self.board[j-1, i] == self.board[j, i]:
+                                break
                             elif self.board[j-1, i] == \
                                     self.board[j, i] and not modif:
                                 self.board[j-1, i] = \
@@ -267,6 +270,9 @@ class Engine:
                     while True:
                         try:
                             if j == 2 and row_modif and not modif:
+                                break
+                            elif j == 1 and row_modif and not modif and \
+                                    self.board[j+1, i] == self.board[j, i]:
                                 break
                             elif self.board[j+1, i] == \
                                     self.board[j, i] and not modif:
@@ -310,6 +316,9 @@ class Engine:
                         if i >= 1:
                             if i == 1 and row_modif and not modif:
                                 break
+                            elif i == 2 and row_modif and not modif and \
+                                    self.board[j, i-1] == self.board[j, i]:
+                                break
                             elif self.board[j, i-1] == \
                                     self.board[j, i] and not modif:
                                 self.board[j, i-1] = \
@@ -351,6 +360,9 @@ class Engine:
                     while True:
                         try:
                             if i == 2 and row_modif and not modif:
+                                break
+                            elif i == 1 and row_modif and not modif and \
+                                    self.board[j, i+1] == self.board[j, i]:
                                 break
                             elif self.board[j, i+1] == \
                                     self.board[j, i] and not modif:
