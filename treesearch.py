@@ -1,7 +1,6 @@
 import numpy as np
 import random
 import copy
-from typing import Any
 from collections import deque
 
 
@@ -36,9 +35,9 @@ class Node:
 class TreeSearch:
 
     def __init__(self,
-                 root: Any,
+                 root,
                  executor: object,
-                 target: Any = None,
+                 target=None,
                  max_depth: int = 0) -> None:
         self.root = root
         self.executor = executor
@@ -83,11 +82,12 @@ class TreeSearch:
 class BredthFirstSearch(TreeSearch):
 
     def __init__(self,
-                 root: Any,
+                 root,
                  executor: object,
-                 target: Any = None,
+                 target=None,
                  max_depth: int = 0) -> None:
         super().__init__(root, executor, target, max_depth)
+        self.simulator = None
 
     def search(self):
         while True:
@@ -125,13 +125,16 @@ class BredthFirstSearch(TreeSearch):
             if self.executor.move(copy.deepcopy(parent), action):
                 self.append(self.create(parent, action))
 
+    def simulate(self, node):
+        return self.simulator.run(node)
+
 
 class MonteCarloTreeSearch(TreeSearch):
 
     def __init__(self,
-                 root: Any,
+                 root,
                  executor: object,
-                 target: Any = None,
+                 target=None,
                  max_depth: int = 0) -> None:
         super().__init__(root, executor, target, max_depth)
         self.simulator = None

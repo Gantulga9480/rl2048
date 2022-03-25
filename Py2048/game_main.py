@@ -1,6 +1,5 @@
 from PyGame import PyGame
-from PyGame.utils import INFO, WARNING, ERROR, DEBUG
-from .game_core import Node, Board, Engine
+from .game_core import Board, Engine
 from .game_core import UP, DOWN, LEFT, RIGHT, UNDO, INPLACE
 from .utils import Colors, pygame
 
@@ -74,13 +73,13 @@ class Py2048(PyGame):
         else:
             self.LOG('Impossible move!')
         self.over = not self.game_board.available()
+        return not self.over
 
     def reset(self):
         ...
 
     def USR_render(self):
         if self.rendering:
-            # if not self.over:
             self.draw_board(animation=True)
             if self.over:
                 self.draw_end_screen()

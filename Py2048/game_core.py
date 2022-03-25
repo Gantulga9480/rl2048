@@ -1,15 +1,13 @@
 import numpy as np
 import random
 import copy
-from collections import deque
-from typing import Any
 
 UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
 UNDO = 4  # Experimantal
-ACTION_SPACE = 4  # 5 for +UNDO
+ACTION_SPACE = 5  # 5 for +UNDO
 INPLACE = 5  # For animation
 
 
@@ -37,10 +35,10 @@ class Node:
 class Board:
 
     ODDS = 10      # odds to generate 4 instead of 2
-    START_BOX = 2  # Boself.current_boardes to generate at start
+    START_BOX = 2  # Boxes to generate at start
     BOARD_SHAPE = (4, 4)
 
-    def __init__(self, board: Any = None) -> None:
+    def __init__(self, board=None) -> None:
         """
         If board is present, rootize game board from pre-defined values.
         Otherwise will generate new board.
@@ -202,17 +200,16 @@ class Engine:
                 self.board.generate()
             self.get_possible_actions()
             return True
+        self.board.score = 0
         return False
 
     def undo(self):
         if self.board.last_board is not None:
-            self.board.set(self.board.last_board.get())  # revert board
-            self.board.score = self.board.last_board.score  # revert score
+            self.board.set_all(self.board.last_board)
             self.board.last_board = None  # Delete last board after UNDO
             self.get_possible_actions()
             return True
-        else:
-            return False
+        return False
 
     def up(self):
         __score = 0
