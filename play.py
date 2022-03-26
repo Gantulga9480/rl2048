@@ -1,4 +1,4 @@
-from py2048bot import Py2048Bot, Py2048
+from py2048bot import Py2048Bot
 
 
 g = Py2048Bot(log=True, method='bfs',
