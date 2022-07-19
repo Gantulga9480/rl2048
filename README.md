@@ -8,7 +8,7 @@
 
 ## Optimal values
 ### Breadth first search + MC simulation
-- Tree depth = 2
+- Tree depth = 3
 - Simulation length = 5
 ### MCTS
 - Tree depth = ?

@@ -1,7 +1,6 @@
 from py2048 import Py2048, Engine, Board
 from treesearch import Node, MonteCarloTreeSearch, BredthFirstSearch
 import random
-from Game.utils import *
 
 
 class Py2048Simulator:
@@ -87,20 +86,15 @@ class Py2048Bot(Py2048):
                             max_depth=bfs_depth, sim_num=bfs_sim_num)
 
     def USR_loop_start(self):
-        # if not self.over:
         if self.count > 2:
             self.count = 0
             if self.method:
                 action = self.tree.search()
             else:
                 action = random.choice(self.game_board.possible_actions)
-            LOG(f'Selected action: {action}', log=self.log)
             self.step(action)
-            LOG(f'Next moves: {self.game_board.possible_actions}', log=self.log)
             if self.method:
                 self.tree.reset(BoardNode(ref=self.game_board))
-            if self.over:
-                LOG(f'Final score: {self.game_board.score}', log=self.log)
         else:
             self.count += 1
 
