@@ -3,8 +3,12 @@
 ## Dependency
     pip install numpy
     pip install pygame
-    pip install git+https://github.com/Gantulga9480/Game.git#egg=Game
-    pip install git+https://github.com/Gantulga9480/py2048.git#egg=py2048
+
+## Tree search play
+    python play.py
+
+## Deep RL play
+    python play.py --rl
 
 ## Optimal values
 ### Breadth first search + MC simulation
