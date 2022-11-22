@@ -1,9 +1,5 @@
 # 2048 AI
 
-## Dependency
-    pip install numpy
-    pip install pygame
-
 ## Tree search play
     python play.py
 
