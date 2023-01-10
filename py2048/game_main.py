@@ -70,6 +70,7 @@ class Py2048(Game):
         self.over = not self.game_board.available()
 
     def reset(self):
+        self.over = False
         self.game_engine.reset()
         self.game_board.reset()
         self.game_engine.get_possible_actions(self.game_board)
