@@ -9,7 +9,7 @@ args = parser.parse_args()
 if args.rl:
     g = Deep2048Bot()
 else:
-    g = Py2048Bot(log=True, method='bfs',
+    g = Py2048Bot(method='bfs',
                   bfs_depth=3, bfs_sim_num=5,
                   mcts_depth=6, mcts_sim_num=10)
-g.mainloop()
+g.loop_forever()

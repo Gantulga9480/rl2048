@@ -71,11 +71,9 @@ class BFS(BredthFirstSearch):
 class Py2048Bot(Py2048):
 
     def __init__(self, method=None,
-                 mcts_depth=1, mcts_sim_num=-1, bfs_depth=2, bfs_sim_num=-1,
-                 render=True, log=False) -> None:
-        super().__init__(render=render)
+                 mcts_depth=1, mcts_sim_num=-1, bfs_depth=2, bfs_sim_num=-1) -> None:
+        super().__init__()
         self.count = 0
-        self.log = log
         self.method = method
         root = BoardNode(ref=self.game_board)
         if self.method == 'mcts':
@@ -85,7 +83,7 @@ class Py2048Bot(Py2048):
             self.tree = BFS(root=root, executor=Engine(),
                             max_depth=bfs_depth, sim_num=bfs_sim_num)
 
-    def USR_loop_start(self):
+    def loop(self):
         if self.count > 2:
             self.count = 0
             if self.method:

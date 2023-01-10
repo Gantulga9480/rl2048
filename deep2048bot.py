@@ -5,11 +5,11 @@ import numpy as np
 
 class Deep2048Bot(Py2048):
 
-    def __init__(self, render=True) -> None:
-        super().__init__(render=render)
+    def __init__(self) -> None:
+        super().__init__()
         self.model = tf.keras.models.load_model('deepmodel/model.h5')
 
-    def USR_loop_start(self):
+    def loop(self):
         state = self.game_board.get().flatten()
         action_values = self.model.predict(np.expand_dims(state, axis=0))[0]
         action = self.get_masked_action(action_values)
