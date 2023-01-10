@@ -65,9 +65,11 @@ class Py2048(Game):
     def step(self, dir):
         if dir in self.game_board.possible_actions:
             self.game_engine.move(self.game_board, dir)
+            self.over = not self.game_board.available()
+            return True
         else:
             print('Impossible move!')
-        self.over = not self.game_board.available()
+            return False
 
     def reset(self):
         self.over = False

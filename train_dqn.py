@@ -14,9 +14,9 @@ while sim.running:
         action = model.policy(state)
         n_state, reward, over = sim.step(action)
 
-        model.learn(state, action, n_state, reward, over)
-
-        state = n_state
+        if n_state:
+            model.learn(state, action, n_state, reward, over)
+            state = n_state
 
     info = ' '.join([f'e: {model.e}', f'r: {model.reward_history["episode_reward"][-1]}'])
     print(info)

@@ -30,11 +30,14 @@ class Deep2048(Py2048):
 
     def step(self, dir):
         last_score = self.game_board.score
-        super().step(dir)
+        if super().step(dir):
+            reward = self.game_board.score - last_score
+            state = self.game_board.get().flatten().tolist()
+            state.append(dir)
+        else:
+            state = None
+            reward = 0
         self.loop_once()
-        reward = self.game_board.score - last_score
-        state = self.game_board.get().flatten().tolist()
-        state.append(dir)
         return state, reward, self.over
 
     def get_masked_action(self, q_vals):
