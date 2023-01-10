@@ -85,7 +85,7 @@ class Board:
         else:
             self.board[indices[0]][indices[1]].value = new_value
 
-    def reset(self, board=None):
+    def reset(self, board: 'Board' = None):
         self.board = [[Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],
                       [Node(0), Node(0), Node(0), Node(0)],
@@ -160,12 +160,12 @@ class Board:
             return True
         for i in range(3):
             for j in range(4):
-                if self.board[i][j].value == self.board[i+1][j].value or \
+                if self.board[i][j].value == self.board[i + 1][j].value or \
                         self.board[i][j].value == 0:
                     return True
         for i in range(4):
             for j in range(3):
-                if self.board[i][j].value == self.board[i][j+1].value or \
+                if self.board[i][j].value == self.board[i][j + 1].value or \
                         self.board[i][j].value == 0:
                     return True
         return False
@@ -174,6 +174,10 @@ class Board:
 class Engine:
 
     def __init__(self) -> None:
+        self.board = None
+        self.changed = False
+
+    def reset(self) -> None:
         self.board = None
         self.changed = False
 
@@ -227,22 +231,22 @@ class Engine:
                             if j == 1 and row_modif and not modif:
                                 break
                             elif j == 2 and row_modif and not modif and \
-                                    self.board[j-1, i] == self.board[j, i]:
+                                    self.board[j - 1, i] == self.board[j, i]:
                                 break
-                            elif self.board[j-1, i] == \
+                            elif self.board[j - 1, i] == \
                                     self.board[j, i] and not modif:
-                                self.board[j-1, i] = \
-                                    self.board[j, i]*2
-                                __score += self.board[j, i]*2
+                                self.board[j - 1, i] = \
+                                    self.board[j, i] * 2
+                                __score += self.board[j, i] * 2
                                 self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
-                                stop_index = [j-1, i]
-                            elif self.board[j-1, i] == 0:
-                                self.board[j-1, i] = \
+                                stop_index = [j - 1, i]
+                            elif self.board[j - 1, i] == 0:
+                                self.board[j - 1, i] = \
                                     self.board[j, i]
                                 self.board[j, i] = 0
-                                stop_index = [j-1, i]
+                                stop_index = [j - 1, i]
                             j -= 1
                         else:
                             break
@@ -272,22 +276,22 @@ class Engine:
                             if j == 2 and row_modif and not modif:
                                 break
                             elif j == 1 and row_modif and not modif and \
-                                    self.board[j+1, i] == self.board[j, i]:
+                                    self.board[j + 1, i] == self.board[j, i]:
                                 break
-                            elif self.board[j+1, i] == \
+                            elif self.board[j + 1, i] == \
                                     self.board[j, i] and not modif:
-                                self.board[j+1, i] = \
-                                    self.board[j, i]*2
-                                __score += self.board[j, i]*2
+                                self.board[j + 1, i] = \
+                                    self.board[j, i] * 2
+                                __score += self.board[j, i] * 2
                                 self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
-                                stop_index = [j+1, i]
-                            elif self.board[j+1, i] == 0:
-                                self.board[j+1, i] = \
+                                stop_index = [j + 1, i]
+                            elif self.board[j + 1, i] == 0:
+                                self.board[j + 1, i] = \
                                     self.board[j, i]
                                 self.board[j, i] = 0
-                                stop_index = [j+1, i]
+                                stop_index = [j + 1, i]
                             j += 1
                         except IndexError:
                             break
@@ -317,22 +321,22 @@ class Engine:
                             if i == 1 and row_modif and not modif:
                                 break
                             elif i == 2 and row_modif and not modif and \
-                                    self.board[j, i-1] == self.board[j, i]:
+                                    self.board[j, i - 1] == self.board[j, i]:
                                 break
-                            elif self.board[j, i-1] == \
+                            elif self.board[j, i - 1] == \
                                     self.board[j, i] and not modif:
-                                self.board[j, i-1] = \
-                                    self.board[j, i]*2
-                                __score += self.board[j, i]*2
+                                self.board[j, i - 1] = \
+                                    self.board[j, i] * 2
+                                __score += self.board[j, i] * 2
                                 self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
-                                stop_index = [j, i-1]
-                            elif self.board[j, i-1] == 0:
-                                self.board[j, i-1] = \
+                                stop_index = [j, i - 1]
+                            elif self.board[j, i - 1] == 0:
+                                self.board[j, i - 1] = \
                                     self.board[j, i]
                                 self.board[j, i] = 0
-                                stop_index = [j, i-1]
+                                stop_index = [j, i - 1]
                             i -= 1
                         else:
                             break
@@ -362,22 +366,22 @@ class Engine:
                             if i == 2 and row_modif and not modif:
                                 break
                             elif i == 1 and row_modif and not modif and \
-                                    self.board[j, i+1] == self.board[j, i]:
+                                    self.board[j, i + 1] == self.board[j, i]:
                                 break
-                            elif self.board[j, i+1] == \
+                            elif self.board[j, i + 1] == \
                                     self.board[j, i] and not modif:
-                                self.board[j, i+1] = \
+                                self.board[j, i + 1] = \
                                     self.board[j, i] * 2
-                                __score += self.board[j, i]*2
+                                __score += self.board[j, i] * 2
                                 self.board[j, i] = 0
                                 modif = True
                                 row_modif = True
-                                stop_index = [j, i+1]
-                            elif self.board[j, i+1] == 0:
-                                self.board[j, i+1] = \
+                                stop_index = [j, i + 1]
+                            elif self.board[j, i + 1] == 0:
+                                self.board[j, i + 1] = \
                                     self.board[j, i]
                                 self.board[j, i] = 0
-                                stop_index = [j, i+1]
+                                stop_index = [j, i + 1]
                             i += 1
                         except IndexError:
                             break
@@ -391,9 +395,9 @@ class Engine:
                                                    stop_index, INPLACE])
         return __score
 
-    def get_possible_actions(self, board=None):
+    def get_possible_actions(self, board: Board = None):
         moves = []
-        if board is not None:
+        if board:
             self.board = board
         changes_tmp = self.board.changes.copy()  # preserve changes
         start = self.board.get()  # Get copy of main board values

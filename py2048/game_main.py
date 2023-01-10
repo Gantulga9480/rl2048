@@ -68,10 +68,11 @@ class Py2048(Game):
         else:
             print('Impossible move!')
         self.over = not self.game_board.available()
-        return not self.over
 
     def reset(self):
-        ...
+        self.game_engine.reset()
+        self.game_board.reset()
+        self.game_engine.get_possible_actions(self.game_board)
 
     def onRender(self) -> None:
         self.window.fill(self.color.BG)
