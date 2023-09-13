@@ -1,0 +1,6 @@
+[submodule "py2048"]
+	path = py2048
+	url = https://github.com/Gantulga9480/py2048.git
+[submodule "pyrl"]
+	path = pyrl
+	url = https://github.com/Gantulga9480/pyrl
