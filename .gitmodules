@@ -4,3 +4,6 @@
 [submodule "pyrl"]
 	path = pyrl
 	url = https://github.com/Gantulga9480/pyrl
+[submodule "treesearch"]
+	path = treesearch
+	url = https://github.com/Gantulga9480/treesearch
