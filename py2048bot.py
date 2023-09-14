@@ -1,4 +1,4 @@
-from py2048 import Py2048, Engine, Board
+from py2048.py2048 import Py2048, Board
 from treesearch import Node, MonteCarloTreeSearch, BredthFirstSearch
 import random
 
@@ -8,7 +8,6 @@ class Py2048Simulator:
     def __init__(self, sim_number) -> None:
         self.over = False
         self.game_board = Board()
-        self.game_engine = Engine()
         self.sim_number = sim_number
         self.counter = 0
 
@@ -19,13 +18,12 @@ class Py2048Simulator:
             self.game_board.set_all(board)
         while self.counter != self.sim_number and not self.over:
             self.counter += 1
-            move = random.choice(self.game_board.possible_actions)
+            move = random.choice([0, 1, 2, 3])
             self.step(move)
         return self.scoring()
 
     def step(self, dir):
-        if dir in self.game_board.possible_actions:
-            self.game_engine.move(self.game_board, dir)
+        self.game_board.move(self.game_board, dir)
         self.over = not self.game_board.available()
         return not self.over
 
