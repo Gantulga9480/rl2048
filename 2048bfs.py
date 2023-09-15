@@ -4,30 +4,58 @@ from treesearch.treesearch import Node, BredthFirstSearch
 
 class GameNode(Node):
 
+    """
+    Custom Node class for 2048 tree search. Stores game board state for tree
+    expansion.
+    """
+
     def __init__(self,
                  state: Board,
                  parent: Node,
                  edge=None,
                  value: float = 0,
                  is_leaf: bool = False) -> None:
+        """
+        Parameters
+        ----------
+        state : Board
+            2048 specific state object
+        parent : Node
+            The parent node of this new node
+        edge : Any
+            Parent to current child node connection value (default is None)
+        value : float
+            Value of current state or Node (default is 0)
+        is_leaf : bool
+            (default is False)
+        """
         super().__init__(parent, edge, value, is_leaf)
         self.state = state
 
 
 class GameTree(BredthFirstSearch):
 
+    """
+    Custom BredthFirstSearch class for doing 2048 specific tree expansion
+    """
+
     def __init__(self, max_depth: int = 1) -> None:
+        """
+        Parameters
+        ----------
+        max_depth : int
+            Maximum tree depth to reach
+        """
         super().__init__(max_depth)
-        self.actions = [UP, DOWN, LEFT, RIGHT]
 
     def expand(self, node: GameNode) -> bool:
         is_expanded = False
         # Try to expand tree by executing all possible actions
-        for action in self.actions:
-            # Copy parent node state to childe node
+        for action in [UP, DOWN, LEFT, RIGHT]:
+            # Copy parent node state to childe node (2048 specific)
             childe_state = Board(node.state.size)
             childe_state.set_all(node.state)
-            # Execute current action on childe node state and observe next state
+            # Execute current action on childe node state and observe next state (2048 specific)
             is_moved = childe_state.move(action)
             if is_moved:
                 # if moved expand tree by inserting new node to current parent node
@@ -54,4 +82,4 @@ class Py2048BFS(Py2048):
 
 
 if __name__ == '__main__':
-    Py2048BFS(4, 6).loop_forever()
+    Py2048BFS(4, 5).loop_forever()
