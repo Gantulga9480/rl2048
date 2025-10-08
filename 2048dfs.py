@@ -1,36 +1,6 @@
-from py2048.py2048 import Py2048, Board, UP, DOWN, LEFT, RIGHT
-from treesearch.treesearch import Node, DepthFirstSearch
-
-
-class GameNode(Node):
-
-    """
-    Custom Node class for 2048 tree search. Stores game board state for tree
-    expansion.
-    """
-
-    def __init__(self,
-                 state: Board,
-                 parent: Node,
-                 edge=None,
-                 value: float = 0,
-                 is_leaf: bool = False) -> None:
-        """
-        Parameters
-        ----------
-        state : Board
-            2048 specific state object
-        parent : Node
-            The parent node of this new node
-        edge : Any
-            Parent to current child node connection value (default is None)
-        value : float
-            Value of current state or Node (default is 0)
-        is_leaf : bool
-            (default is False)
-        """
-        super().__init__(parent, edge, value, is_leaf)
-        self.state = state
+from py2048 import Py2048, Board, UP, DOWN, LEFT, RIGHT
+from treesearch import DepthFirstSearch, Node
+from gamenode import GameNode
 
 
 class GameTree(DepthFirstSearch):
@@ -48,8 +18,10 @@ class GameTree(DepthFirstSearch):
         """
         super().__init__(max_depth)
 
-    def expand(self, node: GameNode) -> bool:
+    def expand(self, node: Node) -> bool:
         is_expanded = False
+        if not isinstance(node, GameNode):
+            return is_expanded
         # Try to expand tree by executing all possible actions
         for action in [UP, DOWN, LEFT, RIGHT]:
             # Copy parent node state to childe node (2048 specific)
@@ -72,7 +44,6 @@ class Py2048DFS(Py2048):
         self.tree = GameTree(max_tree_depth)
 
     def loop(self):
-        self.tree.reset()
         res = self.tree.search(GameNode(self.board, None, None, self.board.score, False))
         if res:
             action, score = res[0]

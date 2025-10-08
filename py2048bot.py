@@ -1,4 +1,4 @@
-from py2048.py2048 import Py2048, Board
+from py2048 import Py2048, Board
 from treesearch import Node, MonteCarloTreeSearch, BredthFirstSearch
 import random
 
