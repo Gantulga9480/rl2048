@@ -1,12 +1,12 @@
 from py2048 import Py2048, Board, UP, DOWN, LEFT, RIGHT
-from treesearch import DepthFirstSearch, Node
+from treesearch import Node, DepthFirstSearch
 from gamenode import GameNode
 
 
 class GameTree(DepthFirstSearch):
 
     """
-    Custom BredthFirstSearch class for doing 2048 specific tree expansion
+    Custom DepthFirstSearch class for doing 2048 specific tree expansion
     """
 
     def __init__(self, max_depth: int = 1) -> None:

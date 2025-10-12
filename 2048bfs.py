@@ -1,12 +1,12 @@
 from py2048 import Py2048, Board, UP, DOWN, LEFT, RIGHT
-from treesearch import Node, BredthFirstSearch
+from treesearch import Node, BreadthFirstSearch
 from gamenode import GameNode
 
 
-class GameTree(BredthFirstSearch):
+class GameTree(BreadthFirstSearch):
 
     """
-    Custom BredthFirstSearch class for doing 2048 specific tree expansion
+    Custom BreadthFirstSearch class for doing 2048 specific tree expansion
     """
 
     def __init__(self, max_depth: int = 1) -> None:
@@ -45,10 +45,10 @@ class Py2048BFS(Py2048):
 
     def loop(self):
         res = self.tree.search(GameNode(self.board, None, None, self.board.score, False))
-        if res is not None:
-            actions, score = res
-            self.step(actions[0])
+        if res:
+            action, score = res[0]
+            self.step(action)
 
 
 if __name__ == '__main__':
-    Py2048BFS(4, 5).loop_forever()
+    Py2048BFS(4, 6).loop_forever()
