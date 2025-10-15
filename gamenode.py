@@ -1,5 +1,5 @@
 from treesearch import Node
-from py2048 import Board
+from py2048 import Board, UP, DOWN, LEFT, RIGHT
 from typing import Any
 
 
@@ -32,3 +32,4 @@ class GameNode(Node):
         """
         super().__init__(parent, edge, value, is_leaf)
         self.state = state
+        self.available_actions = [UP, DOWN, LEFT, RIGHT]
