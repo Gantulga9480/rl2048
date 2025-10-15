@@ -4,7 +4,11 @@ from gamenode import GameNode
 import random
 
 
-class Py2048Simulator:
+class GameSimulator:
+
+    """
+    Custom class for doing 2048 specific tree simulation
+    """
 
     def __init__(self) -> None:
         self.over = False
@@ -28,12 +32,12 @@ class Py2048Simulator:
 class GameTree(MonteCarloSearch):
 
     """
-    Custom BreadthFirstSearch class for doing 2048 specific tree expansion
+    Custom class for doing 2048 specific tree expansion
     """
 
     def __init__(self, num_iters: int = 1, c: float = 1) -> None:
         super().__init__(num_iters, c)
-        self.sim = Py2048Simulator()
+        self.sim = GameSimulator()
 
     def simulate(self, node: Node) -> float:
         if not isinstance(node, GameNode):
